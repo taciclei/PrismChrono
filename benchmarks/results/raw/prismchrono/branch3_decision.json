@@ -1,0 +1,9 @@
+{
+  "benchmark": "branch3_decision",
+  "instruction_count": 552,
+  "code_size": 312,
+  "memory_reads": 165,
+  "memory_writes": 106,
+  "branches": 37,
+  "branches_taken": 29
+}

@@ -1,0 +1,9 @@
+{
+  "benchmark": "base24_arithmetic",
+  "instruction_count": 905,
+  "code_size": 487,
+  "memory_reads": 209,
+  "memory_writes": 105,
+  "branches": 56,
+  "branches_taken": 46
+}

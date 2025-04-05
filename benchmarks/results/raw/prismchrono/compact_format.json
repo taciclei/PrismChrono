@@ -1,0 +1,9 @@
+{
+  "benchmark": "compact_format",
+  "instruction_count": 878,
+  "code_size": 346,
+  "memory_reads": 158,
+  "memory_writes": 104,
+  "branches": 69,
+  "branches_taken": 31
+}

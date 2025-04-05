@@ -1,0 +1,43 @@
+{
+  "total_benchmarks": 9,
+  "standard_benchmarks": 6,
+  "ternary_specific_benchmarks": 3,
+  "avg_ratios": {
+    "instruction_count": 0,
+    "code_size": 0,
+    "memory_reads": 0,
+    "memory_writes": 0,
+    "branches": 0,
+    "branches_taken": 0,
+    "inst_mem_ratio": 0,
+    "inst_branch_ratio": 0,
+    "branch_taken_ratio": 0,
+    "code_density": 0
+  },
+  "category_avg_ratios": {
+    "standard": {
+      "instruction_count": 0,
+      "code_size": 0,
+      "memory_reads": 0,
+      "memory_writes": 0,
+      "branches": 0,
+      "branches_taken": 0,
+      "inst_mem_ratio": 0,
+      "inst_branch_ratio": 0,
+      "branch_taken_ratio": 0,
+      "code_density": 0
+    },
+    "ternary_specific": {
+      "instruction_count": 0,
+      "code_size": 0,
+      "memory_reads": 0,
+      "memory_writes": 0,
+      "branches": 0,
+      "branches_taken": 0,
+      "inst_mem_ratio": 0,
+      "inst_branch_ratio": 0,
+      "branch_taken_ratio": 0,
+      "code_density": 0
+    }
+  }
+}

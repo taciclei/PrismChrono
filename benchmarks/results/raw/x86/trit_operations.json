@@ -1,0 +1,9 @@
+{
+  "benchmark": "trit_operations",
+  "instruction_count": 808,
+  "code_size": 456,
+  "memory_reads": 220,
+  "memory_writes": 153,
+  "branches": 82,
+  "branches_taken": 47
+}

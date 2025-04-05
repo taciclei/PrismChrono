@@ -1,0 +1,9 @@
+{
+  "benchmark": "factorial",
+  "instruction_count": 1117,
+  "code_size": 485,
+  "memory_reads": 271,
+  "memory_writes": 123,
+  "branches": 59,
+  "branches_taken": 47
+}

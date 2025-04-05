@@ -1,0 +1,149 @@
+{
+  "benchmarks": {
+    "standard": [
+      {
+        "name": "sum_array",
+        "description": "Calcul de la somme des éléments d'un tableau d'entiers",
+        "params": {
+          "array_size": 100
+        }
+      },
+      {
+        "name": "memcpy",
+        "description": "Copie d'un bloc de mémoire d'une zone source vers une zone destination",
+        "params": {
+          "block_size": 100
+        }
+      },
+      {
+        "name": "factorial",
+        "description": "Calcul itératif de la factorielle d'un nombre",
+        "params": {
+          "n": 10
+        }
+      },
+      {
+        "name": "linear_search",
+        "description": "Recherche de la première occurrence d'une valeur dans un tableau",
+        "params": {
+          "array_size": 100,
+          "search_value": 42
+        }
+      },
+      {
+        "name": "insertion_sort",
+        "description": "Tri d'un petit tableau d'entiers par insertion",
+        "params": {
+          "array_size": 20
+        }
+      },
+      {
+        "name": "function_call",
+        "description": "Test d'appel de fonction simple",
+        "params": {
+          "call_count": 10
+        }
+      }
+    ],
+    "ternary_specific": [
+      {
+        "name": "ternary_logic",
+        "description": "Implémentation d'un système de vote à trois états",
+        "params": {
+          "array_size": 50
+        }
+      },
+      {
+        "name": "special_states",
+        "description": "Traitement d'un tableau avec des valeurs spéciales (NULL, NaN)",
+        "params": {
+          "array_size": 50,
+          "special_count": 10
+        }
+      },
+      {
+        "name": "base24_arithmetic",
+        "description": "Calculs exploitant la base 24 ou la symétrie",
+        "params": {
+          "operations_count": 30
+        }
+      },
+      {
+        "name": "trit_operations",
+        "description": "Opérations spécialisées trit par trit (TMIN, TMAX, TSUM, TCMP3)",
+        "params": {
+          "array_size": 50
+        }
+      },
+      {
+        "name": "branch3_decision",
+        "description": "Prise de décision avec branchement ternaire (BRANCH3)",
+        "params": {
+          "decisions_count": 30
+        }
+      },
+      {
+        "name": "compact_format",
+        "description": "Comparaison entre format standard et format compact",
+        "params": {
+          "iterations": 50
+        }
+      },
+      {
+        "name": "optimized_memory",
+        "description": "Accès mémoire optimisés avec LOADT3/STORET3 et LOADTM/STORETM",
+        "params": {
+          "array_size": 100
+        }
+      }
+    ]
+  },
+  "metrics": [
+    {
+      "name": "instruction_count",
+      "description": "Nombre d'instructions exécutées",
+      "unit": "instructions"
+    },
+    {
+      "name": "code_size",
+      "description": "Taille du code exécutable",
+      "unit": "bytes"
+    },
+    {
+      "name": "memory_reads",
+      "description": "Nombre de lectures mémoire",
+      "unit": "opérations"
+    },
+    {
+      "name": "memory_writes",
+      "description": "Nombre d'écritures mémoire",
+      "unit": "opérations"
+    },
+    {
+      "name": "branches",
+      "description": "Nombre de branches",
+      "unit": "opérations"
+    },
+    {
+      "name": "branches_taken",
+      "description": "Nombre de branches prises",
+      "unit": "opérations"
+    }
+  ],
+  "platforms": {
+    "prismchrono": {
+      "simulator_path": "../prismChrono_sim/target/release/prismchrono_sim",
+      "assembler_path": "../prismchrono_asm/target/release/prismchrono_asm"
+    },
+    "x86": {
+      "compiler": "gcc",
+      "compiler_flags": "-O2 -Wall",
+      "perf_command": "perf stat -e instructions,L1-dcache-loads,L1-dcache-stores,branch-instructions,branch-misses"
+    }
+  },
+  "output": {
+    "raw_data_path": "../results/raw",
+    "graphs_path": "../results/graphs",
+    "report_path": "../results/reports"
+  }
+}

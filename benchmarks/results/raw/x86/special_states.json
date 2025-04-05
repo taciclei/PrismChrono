@@ -1,0 +1,9 @@
+{
+  "benchmark": "special_states",
+  "instruction_count": 904,
+  "code_size": 467,
+  "memory_reads": 298,
+  "memory_writes": 113,
+  "branches": 94,
+  "branches_taken": 38
+}

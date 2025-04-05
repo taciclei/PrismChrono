@@ -1,0 +1,9 @@
+{
+  "benchmark": "linear_search",
+  "instruction_count": 1015,
+  "code_size": 351,
+  "memory_reads": 227,
+  "memory_writes": 187,
+  "branches": 58,
+  "branches_taken": 50
+}

@@ -1,0 +1,10 @@
+benchmark,category,prismchrono_instruction_count,x86_instruction_count,ratio_instruction_count,prismchrono_code_size,x86_code_size,ratio_code_size,prismchrono_memory_reads,x86_memory_reads,ratio_memory_reads,prismchrono_memory_writes,x86_memory_writes,ratio_memory_writes,prismchrono_branches,x86_branches,ratio_branches,prismchrono_branches_taken,x86_branches_taken,ratio_branches_taken,prismchrono_inst_mem_ratio,x86_inst_mem_ratio,ratio_inst_mem_ratio,prismchrono_inst_branch_ratio,x86_inst_branch_ratio,ratio_inst_branch_ratio,prismchrono_branch_taken_ratio,x86_branch_taken_ratio,ratio_branch_taken_ratio,prismchrono_code_density,x86_code_density,ratio_code_density
+sum_array,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+memcpy,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+factorial,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+linear_search,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+insertion_sort,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+function_call,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+ternary_logic,ternary_specific,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+special_states,ternary_specific,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+base24_arithmetic,ternary_specific,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0

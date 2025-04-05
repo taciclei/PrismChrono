@@ -1,0 +1,9 @@
+{
+  "benchmark": "function_call",
+  "instruction_count": 938,
+  "code_size": 419,
+  "memory_reads": 259,
+  "memory_writes": 166,
+  "branches": 97,
+  "branches_taken": 39
+}

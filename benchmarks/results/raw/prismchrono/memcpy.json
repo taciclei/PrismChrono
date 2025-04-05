@@ -1,0 +1,9 @@
+{
+  "benchmark": "memcpy",
+  "instruction_count": 1214,
+  "code_size": 459,
+  "memory_reads": 259,
+  "memory_writes": 117,
+  "branches": 99,
+  "branches_taken": 38
+}

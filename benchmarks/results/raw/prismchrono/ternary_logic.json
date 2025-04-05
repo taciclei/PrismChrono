@@ -1,0 +1,9 @@
+{
+  "benchmark": "ternary_logic",
+  "instruction_count": 782,
+  "code_size": 392,
+  "memory_reads": 208,
+  "memory_writes": 118,
+  "branches": 60,
+  "branches_taken": 39
+}
