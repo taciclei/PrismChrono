@@ -1,0 +1,153 @@
+# Makefile.toml pour le projet PrismChrono
+# Configuration pour cargo-make
+
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+[env]
+# Variables d'environnement communes
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+[tasks.default]
+dependencies = ["build"]
+
+# Tâches principales
+[tasks.build]
+description = "Compile tous les composants du projet PrismChrono"
+dependencies = ["build-asm", "build-sim"]
+
+[tasks.build-asm]
+description = "Compile l'assembleur PrismChrono"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm"
+command = "cargo"
+args = ["build", "--release"]
+
+[tasks.build-sim]
+description = "Compile le simulateur PrismChrono"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim"
+command = "cargo"
+args = ["build", "--release"]
+
+# Tâches de développement
+[tasks.dev]
+description = "Compile en mode développement"
+dependencies = ["dev-asm", "dev-sim"]
+
+[tasks.dev-asm]
+description = "Compile l'assembleur en mode développement"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm"
+command = "cargo"
+args = ["build"]
+
+[tasks.dev-sim]
+description = "Compile le simulateur en mode développement"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim"
+command = "cargo"
+args = ["build"]
+
+# Tâches de test
+[tasks.test]
+description = "Exécute tous les tests"
+dependencies = ["test-asm", "test-sim"]
+
+[tasks.test-asm]
+description = "Exécute les tests de l'assembleur"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm"
+command = "cargo"
+args = ["test"]
+
+[tasks.test-sim]
+description = "Exécute les tests du simulateur"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim"
+command = "cargo"
+args = ["test"]
+
+# Tâches de nettoyage
+[tasks.clean]
+description = "Nettoie tous les artefacts de compilation"
+dependencies = ["clean-asm", "clean-sim"]
+
+[tasks.clean-asm]
+description = "Nettoie les artefacts de compilation de l'assembleur"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm"
+command = "cargo"
+args = ["clean"]
+
+[tasks.clean-sim]
+description = "Nettoie les artefacts de compilation du simulateur"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim"
+command = "cargo"
+args = ["clean"]
+
+# Tâches de documentation
+[tasks.doc]
+description = "Génère la documentation du projet"
+dependencies = ["doc-asm", "doc-sim"]
+
+[tasks.doc-asm]
+description = "Génère la documentation de l'assembleur"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm"
+command = "cargo"
+args = ["doc", "--no-deps"]
+
+[tasks.doc-sim]
+description = "Génère la documentation du simulateur"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim"
+command = "cargo"
+args = ["doc", "--no-deps"]
+
+# Tâches de benchmark
+[tasks.bench]
+description = "Exécute les benchmarks"
+workspace = false
+cwd = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/benchmarks"
+command = "./scripts/run_all.sh"
+
+# Tâches d'assemblage et d'exécution d'exemples
+[tasks.run-example]
+description = "Assemble et exécute un exemple"
+workspace = false
+dependencies = ["build"]
+script = '''
+#!/usr/bin/env bash
+if [ -z "$EXAMPLE" ]; then
+  echo "Erreur: Veuillez spécifier un exemple avec --env EXAMPLE=nom_exemple"
+  exit 1
+fi
+
+ASM_PATH="${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm/examples/${EXAMPLE}.s"
+OUT_PATH="${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/benchmarks/prismchrono/${EXAMPLE}.bin"
+
+if [ ! -f "$ASM_PATH" ]; then
+  echo "Erreur: L'exemple $EXAMPLE n'existe pas"
+  exit 1
+fi
+
+# Assembler le fichier
+"${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm/target/release/prismchrono_asm" "$ASM_PATH" -o "$OUT_PATH"
+
+# Exécuter le simulateur
+"${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim/target/release/prismchrono_sim" "$OUT_PATH"
+'''
+
+# Tâches d'installation
+[tasks.install]
+description = "Installe les binaires dans ~/.cargo/bin"
+dependencies = ["build"]
+script = '''
+#!/usr/bin/env bash
+cp "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismchrono_asm/target/release/prismchrono_asm" ~/.cargo/bin/
+cp "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/prismChrono_sim/target/release/prismchrono_sim" ~/.cargo/bin/
+echo "Binaires installés dans ~/.cargo/bin"
+'''

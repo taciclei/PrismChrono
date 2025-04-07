@@ -69,24 +69,16 @@ run_benchmark() {
     return 0
 }
 
-# Exécuter tous les benchmarks standards
-echo "=== Exécution des benchmarks standards ==="
+# Exécuter les benchmarks standard
+echo "Exécution des benchmarks standard..."
 for benchmark in sum_array memcpy factorial linear_search insertion_sort function_call; do
-    if [ -f "$PRISMCHRONO_DIR/${benchmark}.s" ]; then
-        run_benchmark "$benchmark"
-    else
-        echo "Avertissement: Benchmark $benchmark non trouvé, ignoré"
-    fi
+    run_benchmark "$benchmark"
 done
 
-# Exécuter tous les benchmarks spécifiques ternaires
-echo "=== Exécution des benchmarks spécifiques ternaires ==="
-for benchmark in ternary_logic special_states base24_arithmetic; do
-    if [ -f "$PRISMCHRONO_DIR/${benchmark}.s" ]; then
-        run_benchmark "$benchmark"
-    else
-        echo "Avertissement: Benchmark $benchmark non trouvé, ignoré"
-    fi
+# Exécuter les benchmarks spécifiques ternaires
+echo "Exécution des benchmarks spécifiques ternaires..."
+for benchmark in ternary_logic trit_operations branch3_decision branch3_predictor tvpu_operations tvpu_astro_benchmark compact_format optimized_memory base24_arithmetic special_states base60_arithmetic; do
+    run_benchmark "$benchmark"
 done
 
 echo "=== Exécution des benchmarks PrismChrono terminée ==="

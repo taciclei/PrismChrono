@@ -46,6 +46,9 @@ pub enum AluOp {
     TritInv, // Inverseur logique
     TritMin, // Minimum logique
     TritMax, // Maximum logique
+    And,  // ET logique
+    Or,   // OU logique
+    Xor,  // OU exclusif
 
     // Opérations de décalage
     Shl, // Décalage à gauche
@@ -55,17 +58,47 @@ pub enum AluOp {
     Cmp, // Comparaison (met à jour les flags)
 }
 
-/// Représente les conditions pour les instructions de branchement
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Représente les différentes conditions de branchement
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BranchCondition {
+    Zero,     // Égal à zéro
+    NonZero,  // Différent de zéro
+    Negative, // Valeur négative
+    Positive, // Valeur positive
+    Overflow, // Dépassement (overflow)
+    Carry,    // Retenue (carry)
+    True,     // Toujours vrai
+    False,    // Toujours faux
+}
+
+impl BranchCondition {
+    /// Convertit un index en condition de branchement
+    pub fn from_index(index: usize) -> Option<Self> {
+        match index {
+            0 => Some(BranchCondition::Zero),
+            1 => Some(BranchCondition::NonZero),
+            2 => Some(BranchCondition::Negative),
+            3 => Some(BranchCondition::Positive),
+            4 => Some(BranchCondition::Overflow),
+            5 => Some(BranchCondition::Carry),
+            6 => Some(BranchCondition::True),
+            7 => Some(BranchCondition::False),
+            _ => None,
+        }
+    }
+}
+
+/// Représente les différentes conditions pour les tests et branchements
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Condition {
-    Eq,      // Égal (ZF = 1)
-    Ne,      // Non égal (ZF = 0)
-    Lt,      // Inférieur (SF = 1)
-    Ge,      // Supérieur ou égal (SF = 0)
-    Ltu,     // Inférieur non signé
-    Geu,     // Supérieur ou égal non signé
-    Special, // État spécial (XF = 1)
-    Always,  // Toujours vrai
+    Eq,      // Equal
+    Ne,      // Not Equal
+    Lt,      // Less Than
+    Ge,      // Greater or Equal
+    Ltu,     // Less Than (Unsigned)
+    Geu,     // Greater or Equal (Unsigned)
+    Special, // Special condition
+    Always,  // Always true
 }
 
 /// Représente les différents opcodes de l'architecture
@@ -143,7 +176,7 @@ pub enum Instruction {
     // Format B: opérations de branchement
     Branch {
         rs1: Register,
-        cond: Condition,
+        cond: BranchCondition,
         offset: i16, // Offset de branchement
     },
 
@@ -196,6 +229,18 @@ pub enum Instruction {
     System {
         func: i8, // Code de fonction système
     },
+    
+    // Format I: opérations de registres de contrôle/statut
+    Csr {
+        csr: i8,     // Numéro du registre CSR
+        rs1: Register, // Registre source
+        offset: i16, // Valeur immédiate ou fonction
+    },
+    CsrRc {
+        rd: Register,
+        rs1: Register,
+        csr: u8,     // Adresse du registre CSR (0-26)
+    },
 }
 
 /// Conversion des trits en valeurs pour les opcodes
@@ -247,6 +292,24 @@ pub fn trits_to_aluop(trits: [Trit; 3]) -> Option<AluOp> {
 }
 
 /// Conversion des trits en valeurs pour les conditions de branchement
+pub fn trits_to_branch_condition(trits: [Trit; 3]) -> Option<BranchCondition> {
+    // Calculer la valeur numérique des trits (-13 à +13)
+    let value = trit_array_to_i8(trits);
+    
+    match value {
+        -13 => Some(BranchCondition::Zero),
+        -12 => Some(BranchCondition::NonZero),
+        -11 => Some(BranchCondition::Negative),
+        -10 => Some(BranchCondition::Positive),
+        -9 => Some(BranchCondition::Overflow),
+        -8 => Some(BranchCondition::Carry),
+        -7 => Some(BranchCondition::True),
+        -6 => Some(BranchCondition::False),
+        _ => None,
+    }
+}
+
+/// Conversion des trits en valeurs pour les conditions
 pub fn trits_to_condition(trits: [Trit; 3]) -> Option<Condition> {
     // Convertir les 3 trits en valeur ternaire équilibrée (-13 à +13)
     let t0 = trits[0].value();
@@ -347,4 +410,14 @@ pub fn trits_to_register(trits: [Trit; 2]) -> Option<Register> {
         4 => Some(Register::R7),  // (P,P) - Valeur: 1 + 3*1 = 4
         _ => None,                // Registre invalide
     }
+}
+
+/// Convertit un tableau de trits en valeur entière i8
+pub fn trit_array_to_i8(trits: [Trit; 3]) -> i8 {
+    let t0 = trits[0].value();
+    let t1 = trits[1].value();
+    let t2 = trits[2].value();
+    
+    // Conversion en valeur ternaire équilibrée
+    t0 * 9 + t1 * 3 + t2
 }

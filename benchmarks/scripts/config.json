@@ -54,6 +54,21 @@
         }
       },
       {
+        "name": "tvpu_operations",
+        "description": "Évaluation des performances des instructions vectorielles ternaires",
+        "params": {
+          "vector_size": 8,
+          "array_size": 32
+        }
+      },
+      {
+        "name": "branch3_predictor",
+        "description": "Évaluation des performances du prédicteur de branchement ternaire avancé",
+        "params": {
+          "data_size": 100
+        }
+      },
+      {
         "name": "special_states",
         "description": "Traitement d'un tableau avec des valeurs spéciales (NULL, NaN)",
         "params": {
@@ -94,6 +109,60 @@
         "description": "Accès mémoire optimisés avec LOADT3/STORET3 et LOADTM/STORETM",
         "params": {
           "array_size": 100
+        }
+      },
+      {
+        "name": "ternary_signal_processing",
+        "description": "Traitement de signal optimisé avec instructions TFFT et TFILTER",
+        "params": {
+          "signal_size": 64,
+          "filter_size": 8
+        }
+      },
+      {
+        "name": "quantum_simulation",
+        "description": "Simulation quantique avec instructions TQBIT et TQGATE",
+        "params": {
+          "qubits_count": 8,
+          "gates_count": 16,
+          "iterations": 10
+        }
+      },
+      {
+        "name": "ternary_cryptography",
+        "description": "Opérations cryptographiques avec instructions TSHA3, TAES et TRNG",
+        "params": {
+          "data_size": 64,
+          "key_size": 16,
+          "iterations": 10
+        }
+      },
+      {
+        "name": "neural_network_ternary",
+        "description": "Réseaux de neurones avec instructions TNEURON, TCONV2D et TATTN",
+        "params": {
+          "input_size": 16,
+          "hidden_size": 8,
+          "output_size": 4,
+          "batch_size": 10
+        }
+      },
+      {
+        "name": "predictive_cache",
+        "description": "Accès mémoire avec cache prédictif ternaire à trois niveaux de confiance",
+        "params": {
+          "array_size": 1024,
+          "access_count": 100,
+          "cache_size": 64
+        }
+      },
+      {
+        "name": "ternary_data_compression",
+        "description": "Compression et décompression de données avec instructions TCOMPRESS et TDECOMPRESS",
+        "params": {
+          "data_size": 256,
+          "compressed_size": 128,
+          "iterations": 10
         }
       }
     ]

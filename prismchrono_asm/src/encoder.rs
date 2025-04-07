@@ -6,7 +6,7 @@
 use crate::ast::{Directive, Instruction};
 use crate::core_types::{Trit, Tryte, Word, Address};
 use crate::error::AssemblerError;
-use crate::isa_defs::{opcode, func, cond, INSTRUCTION_SIZE_TRITS};
+use crate::isa_defs::{opcode, func, cond, system_func, csr_code, csr_func, INSTRUCTION_SIZE_TRITS};
 use crate::operand::{validate_register, validate_i_immediate, validate_u_immediate, validate_j_offset, validate_s_immediate, validate_b_offset};
 
 /// Représente une donnée encodée (instruction ou données)
@@ -119,7 +119,7 @@ pub fn encode_add(rd: u8, rs1: u8, rs2: u8, line: usize) -> Result<[Trit; 12], A
     // Encoder au format R
     // Note: Le format R complet est défini comme opcode[2:0] | func[2:0] | rs2[2:0] | rs1[2:0] | rd[2:0]
     // mais nous n'avons que 12 trits au total, donc nous ne pouvons pas inclure rd directement
-    let mut trits = assemble_r_format(opcode::R_TYPE, func::ADD, rd, rs1, rs2)?;
+    let trits = assemble_r_format(opcode::R_TYPE, func::ADD, rd, rs1, rs2)?;
     
     // Note: Dans cette implémentation, nous gardons les bits de fonction et nous gérons rd séparément
     // dans la fonction assemble_r_format
@@ -148,7 +148,7 @@ pub fn encode_sub(rd: u8, rs1: u8, rs2: u8, line: usize) -> Result<[Trit; 12], A
     // Encoder au format R
     // Note: Le format R complet est défini comme opcode[2:0] | func[2:0] | rs2[2:0] | rs1[2:0] | rd[2:0]
     // mais nous n'avons que 12 trits au total, donc nous ne pouvons pas inclure rd directement
-    let mut trits = assemble_r_format(opcode::R_TYPE, func::SUB, rd, rs1, rs2)?;
+    let trits = assemble_r_format(opcode::R_TYPE, func::SUB, rd, rs1, rs2)?;
     
     // Note: Dans cette implémentation, nous gardons les bits de fonction et nous gérons rd séparément
     // dans la fonction assemble_r_format
@@ -224,7 +224,7 @@ pub fn encode_branch(rs1: u8, rs2: u8, condition: [Trit; 3], offset: i32, line: 
 
 /// Assemble une instruction au format I
 /// Format I: opcode[2:0] | imm[5:0] | rs1[2:0] | rd[2:0]
-pub fn assemble_i_format(opcode: [Trit; 3], rd: u8, rs1: u8, imm: i32) -> Result<[Trit; 12], AssemblerError> {
+pub fn assemble_i_format(opcode: [Trit; 3], _rd: u8, rs1: u8, imm: i32) -> Result<[Trit; 12], AssemblerError> {
     let mut trits = [Trit::Z; INSTRUCTION_SIZE_TRITS];
     
     // OpCode (bits 0-2)
@@ -308,7 +308,7 @@ pub fn assemble_j_format(opcode: [Trit; 3], rd: u8, offset: i32) -> Result<[Trit
 
 /// Assemble une instruction au format R
 /// Format R: opcode[2:0] | func[2:0] | rs2[2:0] | rs1[2:0] | rd[2:0]
-pub fn assemble_r_format(opcode: [Trit; 3], func: [Trit; 3], rd: u8, rs1: u8, rs2: u8) -> Result<[Trit; 12], AssemblerError> {
+pub fn assemble_r_format(opcode: [Trit; 3], func: [Trit; 3], _rd: u8, rs1: u8, rs2: u8) -> Result<[Trit; 12], AssemblerError> {
     let mut trits = [Trit::Z; INSTRUCTION_SIZE_TRITS];
     
     // OpCode (bits 0-2) - 3 trits
@@ -344,7 +344,7 @@ pub fn assemble_r_format(opcode: [Trit; 3], func: [Trit; 3], rd: u8, rs1: u8, rs
 
 /// Assemble une instruction au format S
 /// Format S: opcode[2:0] | imm[5:0] | rs2[2:0] | rs1[2:0]
-pub fn assemble_s_format(opcode: [Trit; 3], rs1: u8, rs2: u8, imm: i32) -> Result<[Trit; 12], AssemblerError> {
+pub fn assemble_s_format(opcode: [Trit; 3], _rs1: u8, rs2: u8, imm: i32) -> Result<[Trit; 12], AssemblerError> {
     let mut trits = [Trit::Z; INSTRUCTION_SIZE_TRITS];
     
     // OpCode (bits 0-2) - 3 trits
@@ -401,7 +401,7 @@ pub fn assemble_b_format(opcode: [Trit; 3], cond: [Trit; 3], rs1: u8, rs2: u8, o
     
     // Offset - Comme nous n'avons que 12 trits au total, l'offset doit être géré séparément
     // lors de l'assemblage final ou stocké dans un registre spécial
-    let offset_trits = int_to_trits(offset, 3)?;
+    let _offset_trits = int_to_trits(offset, 3)?;
     // Note: Dans cette implémentation, nous ne pouvons pas inclure l'offset directement dans l'instruction
     // car nous avons déjà utilisé tous les 12 trits disponibles
     

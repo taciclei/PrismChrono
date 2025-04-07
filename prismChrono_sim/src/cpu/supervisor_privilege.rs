@@ -1,7 +1,7 @@
 // src/cpu/supervisor_privilege.rs
 // Implémentation des fonctionnalités de gestion du privilège Supervisor
 
-use crate::core::{Trit, Tryte, Word};
+use crate::core::{Trit, Tryte};
 use crate::cpu::registers::PrivilegeLevel;
 
 /// Fonctions utilitaires pour la gestion du champ SPP_t dans sstatus_t

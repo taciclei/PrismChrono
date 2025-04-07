@@ -1,14 +1,10 @@
 // src/bin/test_branch.rs
 // Programme de test pour les instructions de branchement conditionnel
 
-use prismchrono_sim::core::is_valid_address;
 use prismchrono_sim::core::{Trit, Tryte, Word};
 use prismchrono_sim::cpu::decode::decode;
-use prismchrono_sim::cpu::execute::ExecuteError;
-use prismchrono_sim::cpu::execute_branch::BranchOperations;
-use prismchrono_sim::cpu::isa::{AluOp, Condition, Instruction};
+use prismchrono_sim::cpu::isa::{AluOp, BranchCondition, Instruction};
 use prismchrono_sim::cpu::registers::Register;
-use prismchrono_sim::memory::Memory;
 
 fn main() {
     println!("Test des instructions de branchement conditionnel");
@@ -51,7 +47,7 @@ fn main() {
         // BRANCH EQ, offset: 2 (devrait sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Eq,
+            cond: BranchCondition::Zero,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R4 à 1 (ne devrait pas être exécuté)
@@ -93,7 +89,7 @@ fn main() {
         // BRANCH NE, offset: 2 (devrait sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Ne,
+            cond: BranchCondition::NonZero,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R6 à 1 (ne devrait pas être exécuté)
@@ -135,7 +131,7 @@ fn main() {
         // BRANCH LT, offset: 2 (devrait sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Lt,
+            cond: BranchCondition::Negative,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R1 à 100 (ne devrait pas être exécuté)
@@ -177,7 +173,7 @@ fn main() {
         // BRANCH GE, offset: 2 (devrait sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Ge,
+            cond: BranchCondition::Positive,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R2 à 100 (ne devrait pas être exécuté)
@@ -219,7 +215,7 @@ fn main() {
         // BRANCH LTU, offset: 2 (devrait sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Ltu,
+            cond: BranchCondition::Negative,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R1 à 50 (ne devrait pas être exécuté)
@@ -261,7 +257,7 @@ fn main() {
         // BRANCH GEU, offset: 2 (devrait sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Geu,
+            cond: BranchCondition::Positive,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R2 à 50 (ne devrait pas être exécuté)
@@ -291,7 +287,7 @@ fn main() {
         // BRANCH SPECIAL, offset: 2 (devrait sauter à R3+2*4 si XF=1)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Special,
+            cond: BranchCondition::Overflow,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R1 à 60 (ne devrait pas être exécuté si XF=1)
@@ -312,7 +308,7 @@ fn main() {
         // BRANCH ALWAYS, offset: 2 (devrait toujours sauter à R3+2*4)
         Instruction::Branch {
             rs1: Register::R3,
-            cond: Condition::Always,
+            cond: BranchCondition::True,
             offset: 2,
         },
         // Si le branchement n'est pas pris, on met R2 à 60 (ne devrait jamais être exécuté)
@@ -673,42 +669,42 @@ fn encode_instruction(instr: &Instruction) -> [Trit; 12] {
 
             // Condition
             match cond {
-                Condition::Eq => {
+                BranchCondition::Zero => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::N;
                     trits[5] = Trit::N;
                 }
-                Condition::Ne => {
+                BranchCondition::NonZero => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::N;
                     trits[5] = Trit::Z;
                 }
-                Condition::Lt => {
+                BranchCondition::Negative => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::N;
                     trits[5] = Trit::P;
                 }
-                Condition::Ge => {
+                BranchCondition::Positive => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::Z;
                     trits[5] = Trit::N;
                 }
-                Condition::Ltu => {
+                BranchCondition::Overflow => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::Z;
                     trits[5] = Trit::Z;
                 }
-                Condition::Geu => {
+                BranchCondition::Carry => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::Z;
                     trits[5] = Trit::P;
                 }
-                Condition::Special => {
+                BranchCondition::True => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::P;
                     trits[5] = Trit::N;
                 }
-                Condition::Always => {
+                BranchCondition::False => {
                     trits[3] = Trit::N;
                     trits[4] = Trit::P;
                     trits[5] = Trit::Z;

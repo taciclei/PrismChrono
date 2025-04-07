@@ -243,6 +243,143 @@ impl<T: CpuState> AluOperations for T {
                 // On retourne val1 comme résultat (qui ne sera pas utilisé)
                 (val1, flags)
             }
+            AluOp::And => {
+                // Opération logique AND entre val1 et val2
+                let mut res = Word::default_zero();
+                let mut flags = Flags::new();
+                
+                // Parcourir chaque tryte et appliquer l'opération AND
+                for i in 0..8 {
+                    if let (Some(tryte1), Some(tryte2), Some(tryte_res)) = 
+                        (val1.tryte(i), val2.tryte(i), res.tryte_mut(i)) {
+                        // Pour chaque tryte, appliquer AND sur les trits individuels
+                        let trits1 = tryte1.to_trits();
+                        let trits2 = tryte2.to_trits();
+                        let mut result_trits = [Trit::Z; 3];
+                        
+                        for j in 0..3 {
+                            // Implémentation de AND ternaire:
+                            // AND ternaire: le résultat est le minimum des deux trits
+                            result_trits[j] = match (trits1[j], trits2[j]) {
+                                (Trit::N, _) | (_, Trit::N) => Trit::N,
+                                (Trit::Z, _) | (_, Trit::Z) => Trit::Z,
+                                (Trit::P, Trit::P) => Trit::P,
+                            };
+                        }
+                        
+                        *tryte_res = Tryte::from_trits(result_trits);
+                    }
+                }
+                
+                // Mettre à jour les flags
+                flags.zf = res.trytes().iter().all(|t| match t {
+                    Tryte::Digit(13) => true, // 13 = 0 en ternaire équilibré
+                    _ => false,
+                });
+                
+                // Vérifier le signe du résultat
+                if let Some(msb_tryte) = res.tryte(7) {
+                    if let Tryte::Digit(_) = msb_tryte {
+                        let msb_trits = msb_tryte.to_trits();
+                        flags.sf = msb_trits[2] == Trit::N; // Trit de poids fort = N?
+                    }
+                }
+                
+                (res, flags)
+            }
+            AluOp::Or => {
+                // Opération logique OR entre val1 et val2
+                let mut res = Word::default_zero();
+                let mut flags = Flags::new();
+                
+                // Parcourir chaque tryte et appliquer l'opération OR
+                for i in 0..8 {
+                    if let (Some(tryte1), Some(tryte2), Some(tryte_res)) = 
+                        (val1.tryte(i), val2.tryte(i), res.tryte_mut(i)) {
+                        // Pour chaque tryte, appliquer OR sur les trits individuels
+                        let trits1 = tryte1.to_trits();
+                        let trits2 = tryte2.to_trits();
+                        let mut result_trits = [Trit::Z; 3];
+                        
+                        for j in 0..3 {
+                            // Implémentation de OR ternaire:
+                            // OR ternaire: le résultat est le maximum des deux trits
+                            result_trits[j] = match (trits1[j], trits2[j]) {
+                                (Trit::P, _) | (_, Trit::P) => Trit::P,
+                                (Trit::Z, _) | (_, Trit::Z) => Trit::Z,
+                                (Trit::N, Trit::N) => Trit::N,
+                            };
+                        }
+                        
+                        *tryte_res = Tryte::from_trits(result_trits);
+                    }
+                }
+                
+                // Mettre à jour les flags
+                flags.zf = res.trytes().iter().all(|t| match t {
+                    Tryte::Digit(13) => true, // 13 = 0 en ternaire équilibré
+                    _ => false,
+                });
+                
+                // Vérifier le signe du résultat
+                if let Some(msb_tryte) = res.tryte(7) {
+                    if let Tryte::Digit(_) = msb_tryte {
+                        let msb_trits = msb_tryte.to_trits();
+                        flags.sf = msb_trits[2] == Trit::N; // Trit de poids fort = N?
+                    }
+                }
+                
+                (res, flags)
+            }
+            AluOp::Xor => {
+                // Opération logique XOR entre val1 et val2
+                let mut res = Word::default_zero();
+                let mut flags = Flags::new();
+                
+                // Parcourir chaque tryte et appliquer l'opération XOR
+                for i in 0..8 {
+                    if let (Some(tryte1), Some(tryte2), Some(tryte_res)) = 
+                        (val1.tryte(i), val2.tryte(i), res.tryte_mut(i)) {
+                        // Pour chaque tryte, appliquer XOR sur les trits individuels
+                        let trits1 = tryte1.to_trits();
+                        let trits2 = tryte2.to_trits();
+                        let mut result_trits = [Trit::Z; 3];
+                        
+                        for j in 0..3 {
+                            // Implémentation de XOR ternaire
+                            result_trits[j] = match (trits1[j], trits2[j]) {
+                                (Trit::N, Trit::N) => Trit::P, // N XOR N = P
+                                (Trit::N, Trit::Z) => Trit::N, // N XOR Z = N
+                                (Trit::N, Trit::P) => Trit::Z, // N XOR P = Z
+                                (Trit::Z, Trit::N) => Trit::N, // Z XOR N = N
+                                (Trit::Z, Trit::Z) => Trit::Z, // Z XOR Z = Z
+                                (Trit::Z, Trit::P) => Trit::P, // Z XOR P = P
+                                (Trit::P, Trit::N) => Trit::Z, // P XOR N = Z
+                                (Trit::P, Trit::Z) => Trit::P, // P XOR Z = P
+                                (Trit::P, Trit::P) => Trit::N, // P XOR P = N
+                            };
+                        }
+                        
+                        *tryte_res = Tryte::from_trits(result_trits);
+                    }
+                }
+                
+                // Mettre à jour les flags
+                flags.zf = res.trytes().iter().all(|t| match t {
+                    Tryte::Digit(13) => true, // 13 = 0 en ternaire équilibré
+                    _ => false,
+                });
+                
+                // Vérifier le signe du résultat
+                if let Some(msb_tryte) = res.tryte(7) {
+                    if let Tryte::Digit(_) = msb_tryte {
+                        let msb_trits = msb_tryte.to_trits();
+                        flags.sf = msb_trits[2] == Trit::N; // Trit de poids fort = N?
+                    }
+                }
+                
+                (res, flags)
+            }
         };
 
         // 3. Écrire le résultat dans le registre de destination (sauf pour CMP)
@@ -466,6 +603,143 @@ impl<T: CpuState> AluOperations for T {
                 let flags = compare_24_trits(val1, val2);
                 // On retourne val1 comme résultat (qui ne sera pas utilisé)
                 (val1, flags)
+            }
+            AluOp::And => {
+                // Opération logique AND entre val1 et val2
+                let mut res = Word::default_zero();
+                let mut flags = Flags::new();
+                
+                // Parcourir chaque tryte et appliquer l'opération AND
+                for i in 0..8 {
+                    if let (Some(tryte1), Some(tryte2), Some(tryte_res)) = 
+                        (val1.tryte(i), val2.tryte(i), res.tryte_mut(i)) {
+                        // Pour chaque tryte, appliquer AND sur les trits individuels
+                        let trits1 = tryte1.to_trits();
+                        let trits2 = tryte2.to_trits();
+                        let mut result_trits = [Trit::Z; 3];
+                        
+                        for j in 0..3 {
+                            // Implémentation de AND ternaire:
+                            // AND ternaire: le résultat est le minimum des deux trits
+                            result_trits[j] = match (trits1[j], trits2[j]) {
+                                (Trit::N, _) | (_, Trit::N) => Trit::N,
+                                (Trit::Z, _) | (_, Trit::Z) => Trit::Z,
+                                (Trit::P, Trit::P) => Trit::P,
+                            };
+                        }
+                        
+                        *tryte_res = Tryte::from_trits(result_trits);
+                    }
+                }
+                
+                // Mettre à jour les flags
+                flags.zf = res.trytes().iter().all(|t| match t {
+                    Tryte::Digit(13) => true, // 13 = 0 en ternaire équilibré
+                    _ => false,
+                });
+                
+                // Vérifier le signe du résultat
+                if let Some(msb_tryte) = res.tryte(7) {
+                    if let Tryte::Digit(_) = msb_tryte {
+                        let msb_trits = msb_tryte.to_trits();
+                        flags.sf = msb_trits[2] == Trit::N; // Trit de poids fort = N?
+                    }
+                }
+                
+                (res, flags)
+            }
+            AluOp::Or => {
+                // Opération logique OR entre val1 et val2
+                let mut res = Word::default_zero();
+                let mut flags = Flags::new();
+                
+                // Parcourir chaque tryte et appliquer l'opération OR
+                for i in 0..8 {
+                    if let (Some(tryte1), Some(tryte2), Some(tryte_res)) = 
+                        (val1.tryte(i), val2.tryte(i), res.tryte_mut(i)) {
+                        // Pour chaque tryte, appliquer OR sur les trits individuels
+                        let trits1 = tryte1.to_trits();
+                        let trits2 = tryte2.to_trits();
+                        let mut result_trits = [Trit::Z; 3];
+                        
+                        for j in 0..3 {
+                            // Implémentation de OR ternaire:
+                            // OR ternaire: le résultat est le maximum des deux trits
+                            result_trits[j] = match (trits1[j], trits2[j]) {
+                                (Trit::P, _) | (_, Trit::P) => Trit::P,
+                                (Trit::Z, _) | (_, Trit::Z) => Trit::Z,
+                                (Trit::N, Trit::N) => Trit::N,
+                            };
+                        }
+                        
+                        *tryte_res = Tryte::from_trits(result_trits);
+                    }
+                }
+                
+                // Mettre à jour les flags
+                flags.zf = res.trytes().iter().all(|t| match t {
+                    Tryte::Digit(13) => true, // 13 = 0 en ternaire équilibré
+                    _ => false,
+                });
+                
+                // Vérifier le signe du résultat
+                if let Some(msb_tryte) = res.tryte(7) {
+                    if let Tryte::Digit(_) = msb_tryte {
+                        let msb_trits = msb_tryte.to_trits();
+                        flags.sf = msb_trits[2] == Trit::N; // Trit de poids fort = N?
+                    }
+                }
+                
+                (res, flags)
+            }
+            AluOp::Xor => {
+                // Opération logique XOR entre val1 et val2
+                let mut res = Word::default_zero();
+                let mut flags = Flags::new();
+                
+                // Parcourir chaque tryte et appliquer l'opération XOR
+                for i in 0..8 {
+                    if let (Some(tryte1), Some(tryte2), Some(tryte_res)) = 
+                        (val1.tryte(i), val2.tryte(i), res.tryte_mut(i)) {
+                        // Pour chaque tryte, appliquer XOR sur les trits individuels
+                        let trits1 = tryte1.to_trits();
+                        let trits2 = tryte2.to_trits();
+                        let mut result_trits = [Trit::Z; 3];
+                        
+                        for j in 0..3 {
+                            // Implémentation de XOR ternaire
+                            result_trits[j] = match (trits1[j], trits2[j]) {
+                                (Trit::N, Trit::N) => Trit::P, // N XOR N = P
+                                (Trit::N, Trit::Z) => Trit::N, // N XOR Z = N
+                                (Trit::N, Trit::P) => Trit::Z, // N XOR P = Z
+                                (Trit::Z, Trit::N) => Trit::N, // Z XOR N = N
+                                (Trit::Z, Trit::Z) => Trit::Z, // Z XOR Z = Z
+                                (Trit::Z, Trit::P) => Trit::P, // Z XOR P = P
+                                (Trit::P, Trit::N) => Trit::Z, // P XOR N = Z
+                                (Trit::P, Trit::Z) => Trit::P, // P XOR Z = P
+                                (Trit::P, Trit::P) => Trit::N, // P XOR P = N
+                            };
+                        }
+                        
+                        *tryte_res = Tryte::from_trits(result_trits);
+                    }
+                }
+                
+                // Mettre à jour les flags
+                flags.zf = res.trytes().iter().all(|t| match t {
+                    Tryte::Digit(13) => true, // 13 = 0 en ternaire équilibré
+                    _ => false,
+                });
+                
+                // Vérifier le signe du résultat
+                if let Some(msb_tryte) = res.tryte(7) {
+                    if let Tryte::Digit(_) = msb_tryte {
+                        let msb_trits = msb_tryte.to_trits();
+                        flags.sf = msb_trits[2] == Trit::N; // Trit de poids fort = N?
+                    }
+                }
+                
+                (res, flags)
             }
         };
 

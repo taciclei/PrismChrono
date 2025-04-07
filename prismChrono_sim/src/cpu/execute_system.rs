@@ -16,7 +16,8 @@
 use crate::alu::add_24_trits;
 use crate::core::{Trit, Tryte, Word};
 use crate::cpu::execute::ExecuteError;
-use crate::cpu::registers::{PrivilegeLevel, Register, RegisterError, TrapCause};
+use crate::cpu::registers::{PrivilegeLevel, Register, TrapCause};
+use crate::cpu::state::CpuState;
 use crate::cpu::supervisor_privilege::SupervisorPrivilegeOperations;
 
 /// Fonctions utilitaires pour la gestion des registres de délégation
@@ -194,8 +195,8 @@ pub trait SystemOperations {
     fn execute_ebreak(&mut self) -> Result<(), ExecuteError>;
 }
 
-/// Trait pour les opérations CSR
-pub trait CsrOperations {
+/// Trait pour les opérations sur les registres de contrôle et de statut (CSR)
+pub trait CsrOperations: CpuState + SupervisorPrivilegeOperations {
     /// Lit la valeur d'un CSR
     fn read_csr(&self, csr: i8) -> Result<Word, ExecuteError>;
 
@@ -207,6 +208,12 @@ pub trait CsrOperations {
 
     /// Exécute une instruction CSRRS (CSR Read & Set)
     fn execute_csrrs(&mut self, rd: Register, csr: i8, rs1: Register) -> Result<(), ExecuteError>;
+
+    /// Exécute une instruction CSRRC (CSR Read & Clear)
+    fn execute_csrrc(&mut self, rd: Register, csr: i8, rs1: Register) -> Result<(), ExecuteError>;
+
+    /// Exécute une instruction CSR avec un immédiat
+    fn execute_csr_imm(&mut self, csr: u8, rd: Register, imm: i16) -> Result<(), ExecuteError>;
 
     /// Vérifie si l'accès à un CSR est autorisé
     fn check_csr_access(&self, csr: i8, write: bool) -> Result<(), ExecuteError>;
@@ -236,7 +243,7 @@ pub trait CsrOperations {
     fn write_sepc(&mut self, value: Word);
 
     /// Gère un trap (exception/syscall)
-    fn handle_trap(&mut self, cause: TrapCause) -> Result<(), ExecuteError>;
+    fn handle_trap(&mut self, _cause: TrapCause) -> Result<(), ExecuteError>;
     
     /// Gère un trap en mode Supervisor
     /// Cette fonction est similaire à handle_trap mais utilise les CSR du mode Supervisor
@@ -263,7 +270,7 @@ pub trait CsrOperations {
         // 5. Sauter à l'adresse contenue dans stvec_t
         let stvec = match self.state_read_csr(5) {
             Ok(value) => value,
-            Err(_) => Word::zero(), // Ne devrait jamais arriver
+            Err(_) => Word::zero(), // En cas d'erreur, utiliser une adresse par défaut
         };
         self.write_pc(stvec);
 
@@ -357,7 +364,7 @@ impl<T: CpuState> SystemOperations for T {
                 // Restaurer le PC depuis sepc_t
                 let sepc = self.read_sepc();
                 self.write_pc(sepc);
-                
+
                 Ok(())
             }
         }
@@ -495,7 +502,7 @@ impl<T: CpuState> CsrOperations for T {
 
         // Si rd n'est pas R0, écrire l'ancienne valeur du CSR dans rd
         if rd != Register::R0 {
-            self.write_gpr(rd, old_value.clone());
+            self.write_gpr(rd, old_value);
         }
 
         // Si rs1 n'est pas R0, effectuer l'opération de set
@@ -510,5 +517,122 @@ impl<T: CpuState> CsrOperations for T {
         Ok(())
     }
 
+    /// Exécute une instruction CSRRC (CSR Read & Clear)
+    fn execute_csrrc(&mut self, rd: Register, csr: i8, rs1: Register) -> Result<(), ExecuteError> {
+        // Vérifier l'accès au CSR
+        let write = rs1 != Register::R0;
+        self.check_csr_access(csr, write)?;
+
+        // Lire la valeur actuelle du CSR
+        let old_value = self.read_csr(csr)?;
+
+        // Si rd n'est pas R0, écrire l'ancienne valeur du CSR dans rd
+        if rd != Register::R0 {
+            self.write_gpr(rd, old_value);
+        }
+
+        // Si rs1 n'est pas R0, effectuer l'opération de clear
+        if rs1 != Register::R0 {
+            // Lire la valeur du registre source
+            let rs1_value = self.read_gpr(rs1);
+
+            // Effectuer un AND bit à bit entre la valeur actuelle du CSR et la négation de rs1_value
+            self.state_clear_csr(csr, rs1_value).map_err(ExecuteError::from)?
+        }
+
+        Ok(())
+    }
+
+    /// Exécute une instruction CSR avec un immédiat
+    fn execute_csr_imm(&mut self, csr: u8, rd: Register, imm: i16) -> Result<(), ExecuteError> {
+        // Vérifier l'accès au CSR
+        let write = imm != 0;
+        self.check_csr_access(csr as i8, write)?;
+
+        // Lire la valeur actuelle du CSR
+        let old_value = self.read_csr(csr as i8)?;
+
+        // Si rd n'est pas R0, écrire l'ancienne valeur du CSR dans rd
+        if rd != Register::R0 {
+            self.write_gpr(rd, old_value);
+        }
+
+        // Si imm n'est pas 0, effectuer l'opération de set
+        if imm != 0 {
+            // Créer une valeur Word à partir de l'immédiat
+            let imm_value = Word::from_i16(imm);
+
+            // Effectuer un OR bit à bit entre la valeur actuelle du CSR et imm_value
+            self.write_csr(csr as i8, imm_value);
+        }
+
+        Ok(())
+    }
+
     /// Vérifie si l'accès à un CSR est autorisé
     fn check_csr_access(&self, csr: i8, write: bool) -> Result<(), ExecuteError> {
+        // Vérifier le niveau de privilège requis pour accéder au CSR
+        let csr_privilege = (csr >> 6) & 0x3;
+        
+        // Vérifier si l'accès en écriture est autorisé
+        let read_only = ((csr >> 5) & 0x1) == 1;
+        
+        if write && read_only {
+            return Err(ExecuteError::IllegalCsrAccess);
+        }
+        
+        // Vérifier le niveau de privilège
+        let current_privilege = self.get_privilege() as i8;
+        if current_privilege < csr_privilege {
+            return Err(ExecuteError::IllegalCsrAccess);
+        }
+        
+        Ok(())
+    }
+
+    /// Obtient le niveau de privilège actuel
+    fn get_privilege(&self) -> PrivilegeLevel {
+        self.state_get_privilege()
+    }
+
+    /// Définit le niveau de privilège actuel
+    fn set_privilege(&mut self, privilege: PrivilegeLevel) {
+        self.state_set_privilege(privilege);
+    }
+
+    /// Obtient le niveau de privilège précédent à partir de mstatus_t.MPP_t
+    fn get_previous_privilege(&self) -> PrivilegeLevel {
+        self.state_get_previous_privilege()
+    }
+
+    /// Définit le niveau de privilège précédent dans mstatus_t.MPP_t
+    fn set_previous_privilege(&mut self, privilege: PrivilegeLevel) {
+        self.state_set_previous_privilege(privilege);
+    }
+
+    /// Lit la valeur de mepc_t
+    fn read_mepc(&self) -> Word {
+        self.state_read_csr(0).unwrap_or_default()
+    }
+
+    /// Écrit une valeur dans mepc_t
+    fn write_mepc(&mut self, value: Word) {
+        self.state_write_csr(0, value);
+    }
+
+    /// Lit la valeur de sepc_t
+    fn read_sepc(&self) -> Word {
+        self.state_read_csr(4).unwrap_or_default()
+    }
+
+    /// Écrit une valeur dans sepc_t
+    fn write_sepc(&mut self, value: Word) {
+        self.state_write_csr(4, value);
+    }
+
+    /// Gère un trap (exception/syscall)
+    fn handle_trap(&mut self, _cause: TrapCause) -> Result<(), ExecuteError> {
+        // Implémentation de la gestion des traps
+        Ok(())
+    }
+}

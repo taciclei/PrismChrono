@@ -5,7 +5,6 @@
 
 use prismchrono_sim::core::{Trit, Tryte, Word};
 use prismchrono_sim::cpu::execute::Cpu;
-use prismchrono_sim::memory::Memory;
 
 fn main() {
     println!("🏳️‍🌈 Architecture PrismChrono - Test du CPU (Sprint 6)");

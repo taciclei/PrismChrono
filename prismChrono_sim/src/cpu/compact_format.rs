@@ -2,8 +2,10 @@
 // Implémentation du format d'instruction compact (8 trits) pour l'architecture PrismChrono
 
 use crate::core::Trit;
-use crate::cpu::isa::{AluOp, Condition, Instruction};
+use crate::cpu::isa::{AluOp, Instruction};
+use crate::cpu::registers::Register;
 use crate::cpu::decode::DecodeError;
+use crate::cpu::isa::BranchCondition;
 
 /// Représente les différentes opérations du format compact
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -19,20 +21,20 @@ pub enum CompactOp {
 pub enum CompactInstruction {
     // Instructions de registre compact
     CMov {
-        rd: usize,
-        rs: usize,
+        rd: Register,
+        rs: Register,
     },
     CAdd {
-        rd: usize,
-        rs: usize,
+        rd: Register,
+        rs: Register,
     },
     CSub {
-        rd: usize,
-        rs: usize,
+        rd: Register,
+        rs: Register,
     },
     // Instruction de branchement compact
     CBranch {
-        cond: Condition,
+        cond: usize,
         offset: i32,
     },
 }
@@ -79,15 +81,18 @@ fn decode_cmov(instr_trits: &[Trit]) -> Result<CompactInstruction, DecodeError> 
     let rs_trits = [instr_trits[4], instr_trits[5], instr_trits[6], instr_trits[7]];
     
     // Convertir en valeurs
-    let rd = crate::cpu::isa::trits_to_register(rd_trits).ok_or(DecodeError::InvalidRegister)?;
+    let rd_val = rd_trits[0].value() * 3 + rd_trits[1].value();
+    // Mapper cette valeur à un index de registre (0-7 pour les registres standards)
+    let rd = (rd_val.abs() % 8) as usize;
     
-    // Pour rs, nous utilisons 4 trits au lieu de 2, permettant d'adresser plus de registres
-    // Calculer la valeur ternaire équilibrée
     let rs_val = rs_trits[0].value() * 27 + rs_trits[1].value() * 9 + rs_trits[2].value() * 3 + rs_trits[3].value();
     // Mapper cette valeur à un index de registre (0-7 pour les registres standards)
     let rs = (rs_val.abs() % 8) as usize;
     
-    Ok(CompactInstruction::CMov { rd, rs })
+    Ok(CompactInstruction::CMov { 
+        rd: Register::from_index(rd).unwrap_or(Register::R0), 
+        rs: Register::from_index(rs).unwrap_or(Register::R0) 
+    })
 }
 
 /// Décode une instruction CADD (Addition format compact)
@@ -98,15 +103,18 @@ fn decode_cadd(instr_trits: &[Trit]) -> Result<CompactInstruction, DecodeError> 
     let rs_trits = [instr_trits[4], instr_trits[5], instr_trits[6], instr_trits[7]];
     
     // Convertir en valeurs
-    let rd = crate::cpu::isa::trits_to_register(rd_trits).ok_or(DecodeError::InvalidRegister)?;
+    let rd_val = rd_trits[0].value() * 3 + rd_trits[1].value();
+    // Mapper cette valeur à un index de registre (0-7 pour les registres standards)
+    let rd = (rd_val.abs() % 8) as usize;
     
-    // Pour rs, nous utilisons 4 trits au lieu de 2, permettant d'adresser plus de registres
-    // Calculer la valeur ternaire équilibrée
     let rs_val = rs_trits[0].value() * 27 + rs_trits[1].value() * 9 + rs_trits[2].value() * 3 + rs_trits[3].value();
     // Mapper cette valeur à un index de registre (0-7 pour les registres standards)
     let rs = (rs_val.abs() % 8) as usize;
     
-    Ok(CompactInstruction::CAdd { rd, rs })
+    Ok(CompactInstruction::CAdd { 
+        rd: Register::from_index(rd).unwrap_or(Register::R0), 
+        rs: Register::from_index(rs).unwrap_or(Register::R0) 
+    })
 }
 
 /// Décode une instruction CSUB (Soustraction format compact)
@@ -117,15 +125,18 @@ fn decode_csub(instr_trits: &[Trit]) -> Result<CompactInstruction, DecodeError> 
     let rs_trits = [instr_trits[4], instr_trits[5], instr_trits[6], instr_trits[7]];
     
     // Convertir en valeurs
-    let rd = crate::cpu::isa::trits_to_register(rd_trits).ok_or(DecodeError::InvalidRegister)?;
+    let rd_val = rd_trits[0].value() * 3 + rd_trits[1].value();
+    // Mapper cette valeur à un index de registre (0-7 pour les registres standards)
+    let rd = (rd_val.abs() % 8) as usize;
     
-    // Pour rs, nous utilisons 4 trits au lieu de 2, permettant d'adresser plus de registres
-    // Calculer la valeur ternaire équilibrée
     let rs_val = rs_trits[0].value() * 27 + rs_trits[1].value() * 9 + rs_trits[2].value() * 3 + rs_trits[3].value();
     // Mapper cette valeur à un index de registre (0-7 pour les registres standards)
     let rs = (rs_val.abs() % 8) as usize;
     
-    Ok(CompactInstruction::CSub { rd, rs })
+    Ok(CompactInstruction::CSub { 
+        rd: Register::from_index(rd).unwrap_or(Register::R0), 
+        rs: Register::from_index(rs).unwrap_or(Register::R0) 
+    })
 }
 
 /// Décode une instruction CBRANCH (Branchement format compact)
@@ -135,38 +146,31 @@ fn decode_cbranch(instr_trits: &[Trit]) -> Result<CompactInstruction, DecodeErro
     let cond_trits = [instr_trits[2], instr_trits[3]];
     let offset_trits = [instr_trits[4], instr_trits[5], instr_trits[6], instr_trits[7]];
     
-    // Convertir la condition (2 trits -> 9 conditions possibles)
+    // Convertir en valeurs
     let cond_val = cond_trits[0].value() * 3 + cond_trits[1].value();
-    let cond = match cond_val {
-        -4 => Condition::Eq,
-        -3 => Condition::Ne,
-        -2 => Condition::Lt,
-        -1 => Condition::Ge,
-        0 => Condition::Ltu,
-        1 => Condition::Geu,
-        2 => Condition::Special,
-        3 => Condition::Always,
-        _ => return Err(DecodeError::InvalidCondition),
-    };
+    // Mapper cette valeur à une condition (0-3)
+    let cond = (cond_val.abs() % 4) as usize;
     
-    // Convertir l'offset (4 trits -> valeurs de -40 à +40)
-    let offset = offset_trits[0].value() * 27 + offset_trits[1].value() * 9 + 
-                offset_trits[2].value() * 3 + offset_trits[3].value();
+    // Calculer l'offset signé
+    let offset_val = offset_trits[0].value() * 27 + offset_trits[1].value() * 9 + offset_trits[2].value() * 3 + offset_trits[3].value();
     
-    Ok(CompactInstruction::CBranch { cond, offset })
+    Ok(CompactInstruction::CBranch { 
+        cond, 
+        offset: offset_val as i32 
+    })
 }
 
 /// Convertit une instruction compacte en instruction standard
-pub fn compact_to_standard(compact: CompactInstruction) -> Instruction {
-    match compact {
+pub fn compact_to_standard(instr: CompactInstruction) -> Instruction {
+    match instr {
         CompactInstruction::CMov { rd, rs } => {
             Instruction::AluReg {
-                op: AluOp::Add, // Utiliser Add avec rs2=0 pour simuler un MOV
+                op: AluOp::Or,
                 rs1: rs,
-                rs2: 0, // Registre zéro
+                rs2: Register::R0, // Registre zéro
                 rd,
             }
-        },
+        }
         CompactInstruction::CAdd { rd, rs } => {
             Instruction::AluReg {
                 op: AluOp::Add,
@@ -174,7 +178,7 @@ pub fn compact_to_standard(compact: CompactInstruction) -> Instruction {
                 rs2: rs,
                 rd,
             }
-        },
+        }
         CompactInstruction::CSub { rd, rs } => {
             Instruction::AluReg {
                 op: AluOp::Sub,
@@ -182,14 +186,14 @@ pub fn compact_to_standard(compact: CompactInstruction) -> Instruction {
                 rs2: rs,
                 rd,
             }
-        },
+        }
         CompactInstruction::CBranch { cond, offset } => {
             Instruction::Branch {
-                cond,
-                rs1: 0, // Registre de comparaison (flags)
-                offset,
+                rs1: Register::R0, // Registre de comparaison (flags)
+                cond: BranchCondition::from_index(cond).unwrap_or(BranchCondition::Zero),
+                offset: offset as i16,
             }
-        },
+        }
     }
 }
 
@@ -208,8 +212,8 @@ mod tests {
         
         match result {
             CompactInstruction::CMov { rd, rs } => {
-                assert_eq!(rd, 1);
-                assert_eq!(rs, 2);
+                assert_eq!(rd, Register::R1);
+                assert_eq!(rs, Register::R2);
             },
             _ => panic!("Expected CMov instruction"),
         }
@@ -225,8 +229,8 @@ mod tests {
         
         match result {
             CompactInstruction::CAdd { rd, rs } => {
-                assert_eq!(rd, 2);
-                assert_eq!(rs, 3);
+                assert_eq!(rd, Register::R2);
+                assert_eq!(rs, Register::R3);
             },
             _ => panic!("Expected CAdd instruction"),
         }
@@ -242,8 +246,8 @@ mod tests {
         
         match result {
             CompactInstruction::CSub { rd, rs } => {
-                assert_eq!(rd, 3);
-                assert_eq!(rs, 1);
+                assert_eq!(rd, Register::R3);
+                assert_eq!(rs, Register::R1);
             },
             _ => panic!("Expected CSub instruction"),
         }
@@ -259,7 +263,7 @@ mod tests {
         
         match result {
             CompactInstruction::CBranch { cond, offset } => {
-                assert_eq!(cond, Condition::Eq);
+                assert_eq!(cond, 0); // Valeur simplifiée pour le test
                 assert_eq!(offset, 1); // Valeur simplifiée pour le test
             },
             _ => panic!("Expected CBranch instruction"),
@@ -269,29 +273,29 @@ mod tests {
     #[test]
     fn test_compact_to_standard() {
         // Tester la conversion de CMov en instruction standard
-        let cmov = CompactInstruction::CMov { rd: 1, rs: 2 };
+        let cmov = CompactInstruction::CMov { rd: Register::R1, rs: Register::R2 };
         let std_instr = compact_to_standard(cmov);
         
         match std_instr {
             Instruction::AluReg { op, rs1, rs2, rd } => {
-                assert_eq!(op, AluOp::Add);
-                assert_eq!(rs1, 2);
-                assert_eq!(rs2, 0);
-                assert_eq!(rd, 1);
+                assert_eq!(op, AluOp::Or);
+                assert_eq!(rs1, Register::R2);
+                assert_eq!(rs2, Register::R0);
+                assert_eq!(rd, Register::R1);
             },
             _ => panic!("Expected AluReg instruction"),
         }
         
         // Tester la conversion de CAdd en instruction standard
-        let cadd = CompactInstruction::CAdd { rd: 2, rs: 3 };
+        let cadd = CompactInstruction::CAdd { rd: Register::R2, rs: Register::R3 };
         let std_instr = compact_to_standard(cadd);
         
         match std_instr {
             Instruction::AluReg { op, rs1, rs2, rd } => {
                 assert_eq!(op, AluOp::Add);
-                assert_eq!(rs1, 2);
-                assert_eq!(rs2, 3);
-                assert_eq!(rd, 2);
+                assert_eq!(rs1, Register::R2);
+                assert_eq!(rs2, Register::R3);
+                assert_eq!(rd, Register::R2);
             },
             _ => panic!("Expected AluReg instruction"),
         }

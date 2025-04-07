@@ -13,9 +13,21 @@ Ce répertoire contient les implémentations en assembleur PrismChrono des bench
 
 ## Benchmarks Spécifiques Ternaires
 
-- `ternary_logic.s` : Implémentation d'un système de vote ou de logique tri-valuée
+- `ternary_logic.s` : Implémentation d'un système de vote à trois états
+- `tvpu_operations.s` : Évaluation des performances des instructions vectorielles ternaires
+- `branch3_predictor.s` : Évaluation des performances du prédicteur de branchement ternaire avancé
 - `special_states.s` : Traitement d'un tableau avec des valeurs spéciales (NULL, NaN)
 - `base24_arithmetic.s` : Calculs exploitant la base 24 ou la symétrie
+- `trit_operations.s` : Opérations spécialisées trit par trit (TMIN, TMAX, TSUM, TCMP3)
+- `branch3_decision.s` : Prise de décision avec branchement ternaire (BRANCH3)
+- `compact_format.s` : Comparaison entre format standard et format compact
+- `optimized_memory.s` : Accès mémoire optimisés avec LOADT3/STORET3 et LOADTM/STORETM
+- `ternary_signal_processing.s` : Traitement de signal optimisé avec instructions TFFT et TFILTER
+- `quantum_simulation.s` : Simulation quantique avec instructions TQBIT et TQGATE
+- `ternary_cryptography.s` : Opérations cryptographiques avec instructions TSHA3, TAES et TRNG
+- `neural_network_ternary.s` : Réseaux de neurones avec instructions TNEURON, TCONV2D et TATTN
+- `predictive_cache.s` : Accès mémoire avec cache prédictif ternaire à trois niveaux de confiance
+- `ternary_data_compression.s` : Compression et décompression de données avec instructions TCOMPRESS et TDECOMPRESS
 
 ## Convention d'implémentation
 

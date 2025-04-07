@@ -2,8 +2,8 @@
 // Extensions du jeu d'instructions pour l'architecture PrismChrono
 // Ces extensions visent à exploiter davantage les avantages de la logique ternaire
 
-use crate::types::{Trit, Word};
-use crate::cpu::registers::RegisterFile;
+use crate::core::{Trit, Word, Tryte};
+use crate::cpu::registers::Register;
 
 /// Opérations ternaires spécialisées
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -148,7 +148,7 @@ pub enum ExtendedInstruction {
 
 /// Implémentation des opérations ternaires spécialisées
 pub fn execute_ternary_op(op: TernaryOp, a: Word, b: Word) -> Word {
-    let mut result = Word::new();
+    let mut result = Word::zero();
     
     for i in 0..24 {
         let trit_a = a.get_trit(i);
@@ -185,7 +185,7 @@ pub fn execute_ternary_op(op: TernaryOp, a: Word, b: Word) -> Word {
 
 /// Implémentation des opérations de rotation et décalage ternaires
 pub fn execute_ternary_shift(op: TernaryShiftOp, a: Word, shift: i32) -> Word {
-    let mut result = Word::new();
+    let mut result = Word::zero();
     let shift_abs = shift.abs() as usize % 24;
     
     match op {
@@ -259,15 +259,18 @@ pub fn execute_ternary_shift(op: TernaryShiftOp, a: Word, shift: i32) -> Word {
 }
 
 /// Implémentation des opérations pour les états spéciaux
-pub fn execute_special_state_op(op: SpecialStateOp, a: Word, registers: &mut RegisterFile) -> Word {
-    let mut result = Word::new();
+pub fn execute_special_state_op(op: SpecialStateOp, a: Word, _registers: &mut Register) -> Word {
+    let mut result = Word::zero();
     
     match op {
         SpecialStateOp::ISNULL => {
             // Vérifie si le mot contient un tryte NULL
             let has_null = (0..8).any(|i| {
-                let tryte = a.get_tryte(i);
-                tryte.is_null() // Méthode à implémenter dans la structure Tryte
+                if let Some(tryte) = a.tryte(i) {
+                    tryte.is_null()
+                } else {
+                    false
+                }
             });
             
             // Définit le résultat à 1 (P) si NULL est présent, sinon 0 (Z)
@@ -276,8 +279,11 @@ pub fn execute_special_state_op(op: SpecialStateOp, a: Word, registers: &mut Reg
         SpecialStateOp::ISNAN => {
             // Vérifie si le mot contient un tryte NaN
             let has_nan = (0..8).any(|i| {
-                let tryte = a.get_tryte(i);
-                tryte.is_nan() // Méthode à implémenter dans la structure Tryte
+                if let Some(tryte) = a.tryte(i) {
+                    tryte.is_nan()
+                } else {
+                    false
+                }
             });
             
             // Définit le résultat à 1 (P) si NaN est présent, sinon 0 (Z)
@@ -286,8 +292,11 @@ pub fn execute_special_state_op(op: SpecialStateOp, a: Word, registers: &mut Reg
         SpecialStateOp::ISUNDEF => {
             // Vérifie si le mot contient un tryte UNDEF
             let has_undef = (0..8).any(|i| {
-                let tryte = a.get_tryte(i);
-                tryte.is_undef() // Méthode à implémenter dans la structure Tryte
+                if let Some(tryte) = a.tryte(i) {
+                    tryte.is_undef()
+                } else {
+                    false
+                }
             });
             
             // Définit le résultat à 1 (P) si UNDEF est présent, sinon 0 (Z)
@@ -296,19 +305,19 @@ pub fn execute_special_state_op(op: SpecialStateOp, a: Word, registers: &mut Reg
         SpecialStateOp::SETNULL => {
             // Définit tous les trytes du mot à NULL
             for i in 0..8 {
-                result.set_tryte(i, create_null_tryte()); // Fonction à implémenter
+                result.set_tryte(i, create_null_tryte());
             }
         },
         SpecialStateOp::SETNAN => {
             // Définit tous les trytes du mot à NaN
             for i in 0..8 {
-                result.set_tryte(i, create_nan_tryte()); // Fonction à implémenter
+                result.set_tryte(i, create_nan_tryte());
             }
         },
         SpecialStateOp::SETUNDEF => {
             // Définit tous les trytes du mot à UNDEF
             for i in 0..8 {
-                result.set_tryte(i, create_undef_tryte()); // Fonction à implémenter
+                result.set_tryte(i, create_undef_tryte());
             }
         },
     }
@@ -318,7 +327,7 @@ pub fn execute_special_state_op(op: SpecialStateOp, a: Word, registers: &mut Reg
 
 /// Implémentation de l'opération conditionnelle ternaire
 pub fn execute_tsel(a: Word, b: Word, c: Word) -> Word {
-    let mut result = Word::new();
+    let mut result = Word::zero();
     
     // Valeur du premier trit de a pour déterminer la condition
     let condition = a.get_trit(0).value();
@@ -362,24 +371,21 @@ fn add_trits_with_carry(a: Trit, b: Trit, carry: Trit) -> (Trit, Trit) {
 }
 
 /// Fonctions auxiliaires pour créer des trytes spéciaux
-fn create_null_tryte() -> [Trit; 3] {
-    // Selon la spécification, NULL est représenté par (P, P, P)
-    [Trit::P, Trit::P, Trit::P]
+fn create_null_tryte() -> Tryte {
+    Tryte::Null
 }
 
-fn create_nan_tryte() -> [Trit; 3] {
-    // Selon la spécification, NaN est représenté par (P, P, N)
-    [Trit::P, Trit::P, Trit::N]
+fn create_nan_tryte() -> Tryte {
+    Tryte::NaN
 }
 
-fn create_undef_tryte() -> [Trit; 3] {
-    // Selon la spécification, UNDEF est représenté par (P, N, P)
-    [Trit::P, Trit::N, Trit::P]
+fn create_undef_tryte() -> Tryte {
+    Tryte::Undefined
 }
 
 /// Implémentation des opérations arithmétiques en base 24
 pub fn execute_base24_op(op: Base24Op, a: Word, b: Word) -> Word {
-    let mut result = Word::new();
+    let mut result = Word::zero();
     
     match op {
         Base24Op::ADDB24 => {
@@ -387,8 +393,8 @@ pub fn execute_base24_op(op: Base24Op, a: Word, b: Word) -> Word {
             let mut carry = 0;
             
             for i in 0..8 {
-                let digit_a = tryte_to_base24(a.get_tryte(i));
-                let digit_b = tryte_to_base24(b.get_tryte(i));
+                let digit_a = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                let digit_b = tryte_to_base24(&b.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
                 
                 let sum = digit_a + digit_b + carry;
                 carry = sum / 24;
@@ -402,8 +408,8 @@ pub fn execute_base24_op(op: Base24Op, a: Word, b: Word) -> Word {
             let mut borrow = 0;
             
             for i in 0..8 {
-                let digit_a = tryte_to_base24(a.get_tryte(i));
-                let digit_b = tryte_to_base24(b.get_tryte(i));
+                let digit_a = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                let digit_b = tryte_to_base24(&b.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
                 
                 let mut diff = digit_a - digit_b - borrow;
                 
@@ -422,10 +428,10 @@ pub fn execute_base24_op(op: Base24Op, a: Word, b: Word) -> Word {
             let mut temp_result = vec![0; 16]; // Résultat temporaire avec espace pour le débordement
             
             for i in 0..8 {
-                let digit_a = tryte_to_base24(a.get_tryte(i));
+                let digit_a = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
                 
                 for j in 0..8 {
-                    let digit_b = tryte_to_base24(b.get_tryte(j));
+                    let digit_b = tryte_to_base24(&b.tryte(j).map_or(Tryte::Digit(13), |t| t.clone()));
                     let product = digit_a * digit_b;
                     
                     // Ajouter le produit à la position appropriée
@@ -469,7 +475,7 @@ pub fn execute_base24_op(op: Base24Op, a: Word, b: Word) -> Word {
             let mut multiplier = 1;
             
             for i in 0..8 {
-                let digit = tryte_to_base24(a.get_tryte(i));
+                let digit = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
                 value += digit * multiplier;
                 multiplier *= 24;
             }
@@ -483,27 +489,20 @@ pub fn execute_base24_op(op: Base24Op, a: Word, b: Word) -> Word {
 }
 
 /// Fonction auxiliaire pour convertir un tryte en chiffre base 24
-fn tryte_to_base24(tryte: [Trit; 3]) -> i32 {
-    // Calculer la valeur en base 3 équilibrée
-    let val_bal3 = tryte[0].value() + 3 * tryte[1].value() + 9 * tryte[2].value();
-    
-    // Appliquer l'offset +13 pour obtenir une valeur de 0 à 26
-    let val_offset = val_bal3 + 13;
-    
-    // Si la valeur est entre 0 et 23, c'est un chiffre base 24 valide
-    if val_offset >= 0 && val_offset < 24 {
-        val_offset
-    } else {
-        // Sinon, c'est un état spécial, retourner une valeur par défaut (0)
-        0
+fn tryte_to_base24(tryte: &Tryte) -> i32 {
+    match tryte {
+        Tryte::Null => 0,
+        Tryte::NaN => 13,
+        Tryte::Undefined => 13,
+        Tryte::Digit(d) => *d as i32,
     }
 }
 
 /// Fonction auxiliaire pour convertir un chiffre base 24 en tryte
-fn base24_to_tryte(digit: i32) -> [Trit; 3] {
+fn base24_to_tryte(digit: i32) -> Tryte {
     if digit < 0 || digit >= 24 {
         // Valeur invalide, retourner un tryte nul
-        return [Trit::Z, Trit::Z, Trit::Z];
+        return Tryte::Digit(13); // 13 représente zéro en ternaire équilibré
     }
     
     // Appliquer l'offset inverse pour obtenir une valeur en base 3 équilibrée
@@ -524,5 +523,96 @@ fn base24_to_tryte(digit: i32) -> [Trit; 3] {
         }
     };
     
-    [convert(t0), convert(t1), convert(t2)]
+    Tryte::from_trits([convert(t0), convert(t1), convert(t2)])
+}
+
+/// Fonction pour effectuer une opération arithmétique en base 24
+pub fn base24_op(a: Word, b: Word, op: fn(i32, i32) -> i32) -> Word {
+    let mut result = Word::zero();
+    
+    // Selon l'opération
+    match op {
+        // Addition base 24
+        _ if op(0, 0) == 0 => { // Addition
+            let mut carry = 0;
+            
+            for i in 0..8 {
+                let digit_a = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                let digit_b = tryte_to_base24(&b.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                
+                let sum = digit_a + digit_b + carry;
+                carry = sum / 24;
+                
+                result.set_tryte(i, base24_to_tryte(sum % 24));
+            }
+        },
+        // Soustraction base 24
+        _ if op(1, 1) == 0 => { // Soustraction
+            let mut borrow = 0;
+            
+            for i in 0..8 {
+                let digit_a = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                let digit_b = tryte_to_base24(&b.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                
+                let mut diff = digit_a - digit_b - borrow;
+                
+                if diff < 0 {
+                    diff += 24;
+                    borrow = 1;
+                } else {
+                    borrow = 0;
+                }
+                
+                result.set_tryte(i, base24_to_tryte(diff));
+            }
+        },
+        // Multiplication base 24
+        _ if op(2, 2) == 4 => { // Multiplication
+            let mut temp_result = vec![0; 16]; // Résultat temporaire avec espace pour le débordement
+            
+            for i in 0..8 {
+                let digit_a = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+                
+                for j in 0..8 {
+                    let digit_b = tryte_to_base24(&b.tryte(j).map_or(Tryte::Digit(13), |t| t.clone()));
+                    let product = digit_a * digit_b;
+                    
+                    // Ajouter le produit à la position appropriée
+                    let pos = i + j;
+                    temp_result[pos] += product;
+                    
+                    // Gérer la retenue
+                    let mut idx = pos;
+                    while temp_result[idx] >= 24 && idx < 15 {
+                        temp_result[idx + 1] += temp_result[idx] / 24;
+                        temp_result[idx] %= 24;
+                        idx += 1;
+                    }
+                }
+            }
+            
+            // Copier le résultat dans le mot de sortie (tronqué aux 8 premiers trytes)
+            for i in 0..8 {
+                result.set_tryte(i, base24_to_tryte(temp_result[i]));
+            }
+        },
+        // Division base 24 (non implémentée ici, retourne simplement a)
+        _ => return a,
+    }
+    
+    result
+}
+
+/// Convertit un mot de 8 trytes en entier base 24
+pub fn word_to_int24(a: Word) -> i32 {
+    let mut value = 0;
+    let mut multiplier = 1;
+    
+    for i in 0..8 {
+        let digit = tryte_to_base24(&a.tryte(i).map_or(Tryte::Digit(13), |t| t.clone()));
+        value += digit * multiplier;
+        multiplier *= 24;
+    }
+    
+    value
 }

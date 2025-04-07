@@ -1,0 +1,16 @@
+benchmark,category,prismchrono_instruction_count,x86_instruction_count,ratio_instruction_count,prismchrono_code_size,x86_code_size,ratio_code_size,prismchrono_memory_reads,x86_memory_reads,ratio_memory_reads,prismchrono_memory_writes,x86_memory_writes,ratio_memory_writes,prismchrono_branches,x86_branches,ratio_branches,prismchrono_branches_taken,x86_branches_taken,ratio_branches_taken,prismchrono_inst_mem_ratio,x86_inst_mem_ratio,ratio_inst_mem_ratio,prismchrono_inst_branch_ratio,x86_inst_branch_ratio,ratio_inst_branch_ratio,prismchrono_branch_taken_ratio,x86_branch_taken_ratio,ratio_branch_taken_ratio,prismchrono_code_density,x86_code_density,ratio_code_density
+sum_array,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+memcpy,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+factorial,standard,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+linear_search,standard,1015,0,inf,351,0,inf,227,0,inf,187,0,inf,58,0,inf,50,0,inf,2.4517,0,inf,17.5,0,inf,0.8621,0,inf,2.8917,0,inf
+insertion_sort,standard,1291,0,inf,497,0,inf,248,0,inf,122,0,inf,71,0,inf,30,0,inf,3.4892,0,inf,18.1831,0,inf,0.4225,0,inf,2.5976,0,inf
+function_call,standard,1166,0,inf,537,0,inf,231,0,inf,114,0,inf,68,0,inf,31,0,inf,3.3797,0,inf,17.1471,0,inf,0.4559,0,inf,2.1713,0,inf
+ternary_logic,ternary_specific,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+tvpu_operations,ternary_specific,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+branch3_predictor,ternary_specific,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+special_states,ternary_specific,834,0,inf,340,0,inf,180,0,inf,118,0,inf,74,0,inf,31,0,inf,2.7987,0,inf,11.2703,0,inf,0.4189,0,inf,2.4529,0,inf
+base24_arithmetic,ternary_specific,870,0,inf,408,0,inf,207,0,inf,134,0,inf,57,0,inf,39,0,inf,2.5513,0,inf,15.2632,0,inf,0.6842,0,inf,2.1324,0,inf
+trit_operations,ternary_specific,650,808,0.8045,341,456,0.7478,141,220,0.6409,86,153,0.5621,48,82,0.5854,33,47,0.7021,2.8634,2.1662,1.3219,13.5417,9.8537,1.3743,0.6875,0.5732,1.1994,1.9062,1.7719,1.0758
+branch3_decision,ternary_specific,552,1178,0.4686,312,521,0.5988,165,248,0.6653,106,162,0.6543,37,89,0.4157,29,25,1.16,2.0369,2.8732,0.7089,14.9189,13.236,1.1271,0.7838,0.2809,2.7903,1.7692,2.261,0.7825
+compact_format,ternary_specific,878,1095,0.8018,346,506,0.6838,158,269,0.5874,104,180,0.5778,69,60,1.15,31,48,0.6458,3.3511,2.4388,1.3741,12.7246,18.25,0.6972,0.4493,0.8,0.5616,2.5376,2.164,1.1726
+optimized_memory,ternary_specific,736,989,0.7442,423,507,0.8343,127,281,0.452,113,169,0.6686,67,83,0.8072,35,39,0.8974,3.0667,2.1978,1.3953,10.9851,11.9157,0.9219,0.5224,0.4699,1.1117,1.74,1.9507,0.892

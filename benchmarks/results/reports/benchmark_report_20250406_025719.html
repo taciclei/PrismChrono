@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Rapport de Benchmarking PrismChrono vs x86</title>
+
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        img { max-width: 100%; height: auto; }
+        h1, h2, h3 { color: #333; }
+        .container { display: flex; flex-wrap: wrap; }
+        .metric-card { flex: 1; min-width: 300px; margin: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+    </style>
+    
+</head>
+<body>
+<h1>Rapport de Benchmarking Comparatif PrismChrono vs x86</h1>
+<p><em>Généré le 06/04/2025 à 02:57:19</em></p>
+<h2>Introduction</h2>
+<p>Ce rapport présente une analyse comparative des performances entre l'architecture ternaire PrismChrono et l'architecture binaire x86. 
+Les benchmarks ont été exécutés sur les deux plateformes et les métriques ont été collectées pour permettre une comparaison directe.</p>
+<h2>Résumé des Résultats</h2>
+<p><strong>Nombre total de benchmarks:</strong> 15
+<strong>Benchmarks standard:</strong> 6
+<strong>Benchmarks spécifiques ternaires:</strong> 9</p>
+<h3>Ratios Moyens PrismChrono/x86</h3>
+<p>Le graphique ci-dessous présente les ratios moyens des métriques clés entre PrismChrono et x86, par catégorie de benchmark:</p>
+<p><img alt="Ratios Moyens" src="../graphs/summary_ratios_latest.png" /></p>
+<h3>Tableau des Ratios Moyens</h3>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">Tous</th>
+<th style="text-align: right;">Standard</th>
+<th style="text-align: right;">Ternaire Spécifique</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0.7048</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.7048</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0.7162</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.7162</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0.5864</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.5864</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0.6157</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.6157</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0.7396</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.7396</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0.8513</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.8513</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">1.2001</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">1.2001</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">1.0301</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">1.0301</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">1.4158</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">1.4158</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.9807</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.9807</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Note: Un ratio &lt; 1 indique que PrismChrono est plus performant que x86 pour cette métrique.
+Un ratio &gt; 1 indique que x86 est plus performant que PrismChrono.</p>
+</blockquote>
+<h2>Analyse par Catégorie de Benchmark</h2>
+<h3>Benchmarks Standard</h3>
+<p>Les benchmarks standard permettent d'évaluer les performances générales de l'architecture PrismChrono par rapport à x86 sur des tâches communes.</p>
+<table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>Description</th>
+<th style="text-align: right;">Ratio Inst</th>
+<th style="text-align: right;">Ratio Mem Ops</th>
+<th style="text-align: right;">Ratio Code Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sum_array</td>
+<td>Calcul de la somme des éléments d'un tableau d'entiers</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>memcpy</td>
+<td>Copie d'un bloc de mémoire d'une zone source vers une zone destination</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>factorial</td>
+<td>Calcul itératif de la factorielle d'un nombre</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>linear_search</td>
+<td>Recherche de la première occurrence d'une valeur dans un tableau</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>insertion_sort</td>
+<td>Tri d'un petit tableau d'entiers par insertion</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>function_call</td>
+<td>Test d'appel de fonction simple</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+</tr>
+</tbody>
+</table>
+<h4>Graphiques des Benchmarks Standard</h4>
+<p><strong>Nombre d'instructions exécutées:</strong>
+<img alt="instruction_count" src="../graphs/instruction_count_standard_latest.png" /></p>
+<p><strong>Taille du code exécutable:</strong>
+<img alt="code_size" src="../graphs/code_size_standard_latest.png" /></p>
+<p><strong>Nombre de lectures mémoire:</strong>
+<img alt="memory_reads" src="../graphs/memory_reads_standard_latest.png" /></p>
+<h3>Benchmarks Ternaires Spécifiques</h3>
+<p>Les benchmarks ternaires spécifiques sont conçus pour mettre en évidence les avantages potentiels de l'architecture ternaire dans des cas d'utilisation particuliers.</p>
+<table>
+<thead>
+<tr>
+<th>Benchmark</th>
+<th>Description</th>
+<th style="text-align: right;">Ratio Inst</th>
+<th style="text-align: right;">Ratio Mem Ops</th>
+<th style="text-align: right;">Ratio Code Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ternary_logic</td>
+<td>Implémentation d'un système de vote à trois états</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>tvpu_operations</td>
+<td>Évaluation des performances des instructions vectorielles ternaires</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch3_predictor</td>
+<td>Évaluation des performances du prédicteur de branchement ternaire avancé</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>special_states</td>
+<td>Traitement d'un tableau avec des valeurs spéciales (NULL, NaN)</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>base24_arithmetic</td>
+<td>Calculs exploitant la base 24 ou la symétrie</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>trit_operations</td>
+<td>Opérations spécialisées trit par trit (TMIN, TMAX, TSUM, TCMP3)</td>
+<td style="text-align: right;">0.8045</td>
+<td style="text-align: right;">0.6015</td>
+<td style="text-align: right;">0.7478</td>
+</tr>
+<tr>
+<td>branch3_decision</td>
+<td>Prise de décision avec branchement ternaire (BRANCH3)</td>
+<td style="text-align: right;">0.4686</td>
+<td style="text-align: right;">0.6598</td>
+<td style="text-align: right;">0.5988</td>
+</tr>
+<tr>
+<td>compact_format</td>
+<td>Comparaison entre format standard et format compact</td>
+<td style="text-align: right;">0.8018</td>
+<td style="text-align: right;">0.5826</td>
+<td style="text-align: right;">0.6838</td>
+</tr>
+<tr>
+<td>optimized_memory</td>
+<td>Accès mémoire optimisés avec LOADT3/STORET3 et LOADTM/STORETM</td>
+<td style="text-align: right;">0.7442</td>
+<td style="text-align: right;">0.5603</td>
+<td style="text-align: right;">0.8343</td>
+</tr>
+</tbody>
+</table>
+<h4>Graphiques des Benchmarks Ternaires Spécifiques</h4>
+<p><strong>Nombre d'instructions exécutées:</strong>
+<img alt="instruction_count" src="../graphs/instruction_count_ternary_specific_latest.png" /></p>
+<p><strong>Taille du code exécutable:</strong>
+<img alt="code_size" src="../graphs/code_size_ternary_specific_latest.png" /></p>
+<p><strong>Nombre de lectures mémoire:</strong>
+<img alt="memory_reads" src="../graphs/memory_reads_ternary_specific_latest.png" /></p>
+<h2>Analyse des Métriques Dérivées</h2>
+<p>Les métriques dérivées permettent d'évaluer l'efficacité relative des architectures au-delà des métriques brutes.</p>
+<h3>Description des Métriques Dérivées</h3>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>inst_mem_ratio</td>
+<td>Ratio Instructions / Opérations Mémoire - Mesure l'efficacité des instructions par rapport aux accès mémoire</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td>Ratio Instructions / Branches - Mesure la densité des branchements dans le code</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td>Ratio Branches Prises / Total Branches - Mesure l'efficacité de la prédiction de branchement</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td>Densité du Code (Instructions / Taille) - Mesure l'efficacité de l'encodage des instructions</td>
+</tr>
+</tbody>
+</table>
+<h3>Graphiques des Métriques Dérivées</h3>
+<p><strong>inst_mem_ratio:</strong>
+<img alt="inst_mem_ratio" src="../graphs/inst_mem_ratio_all_latest.png" /></p>
+<p><strong>inst_branch_ratio:</strong>
+<img alt="inst_branch_ratio" src="../graphs/inst_branch_ratio_all_latest.png" /></p>
+<p><strong>branch_taken_ratio:</strong>
+<img alt="branch_taken_ratio" src="../graphs/branch_taken_ratio_all_latest.png" /></p>
+<p><strong>code_density:</strong>
+<img alt="code_density" src="../graphs/code_density_all_latest.png" /></p>
+<h2>Analyse Détaillée par Benchmark</h2>
+<h3>sum_array (Standard)</h3>
+<p><em>Calcul de la somme des éléments d'un tableau d'entiers</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<h3>memcpy (Standard)</h3>
+<p><em>Copie d'un bloc de mémoire d'une zone source vers une zone destination</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<h3>factorial (Standard)</h3>
+<p><em>Calcul itératif de la factorielle d'un nombre</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<h3>linear_search (Standard)</h3>
+<p><em>Recherche de la première occurrence d'une valeur dans un tableau</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">1015</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">351</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">227</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">187</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">58</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">2.4517</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">17.5000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.8621</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">2.8917</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+</tbody>
+</table>
+<h3>insertion_sort (Standard)</h3>
+<p><em>Tri d'un petit tableau d'entiers par insertion</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">1291</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">497</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">248</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">3.4892</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">18.1831</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.4225</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">2.5976</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+</tbody>
+</table>
+<h3>function_call (Standard)</h3>
+<p><em>Test d'appel de fonction simple</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">1166</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">537</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">231</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">114</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">68</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">3.3797</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">17.1471</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.4559</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">2.1713</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+</tbody>
+</table>
+<h3>ternary_logic (Ternary_specific)</h3>
+<p><em>Implémentation d'un système de vote à trois états</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<h3>tvpu_operations (Ternary_specific)</h3>
+<p><em>Évaluation des performances des instructions vectorielles ternaires</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<h3>branch3_predictor (Ternary_specific)</h3>
+<p><em>Évaluation des performances du prédicteur de branchement ternaire avancé</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">0.0000</td>
+</tr>
+</tbody>
+</table>
+<h3>special_states (Ternary_specific)</h3>
+<p><em>Traitement d'un tableau avec des valeurs spéciales (NULL, NaN)</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">834</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">340</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">118</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">74</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">2.7987</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">11.2703</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.4189</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">2.4529</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+</tbody>
+</table>
+<h3>base24_arithmetic (Ternary_specific)</h3>
+<p><em>Calculs exploitant la base 24 ou la symétrie</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">870</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">408</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">207</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">134</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">57</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">2.5513</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">15.2632</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.6842</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">2.1324</td>
+<td style="text-align: right;">0.0000</td>
+<td style="text-align: right;">inf</td>
+</tr>
+</tbody>
+</table>
+<h3>trit_operations (Ternary_specific)</h3>
+<p><em>Opérations spécialisées trit par trit (TMIN, TMAX, TSUM, TCMP3)</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">650</td>
+<td style="text-align: right;">808</td>
+<td style="text-align: right;">0.8045</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">341</td>
+<td style="text-align: right;">456</td>
+<td style="text-align: right;">0.7478</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">141</td>
+<td style="text-align: right;">220</td>
+<td style="text-align: right;">0.6409</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">86</td>
+<td style="text-align: right;">153</td>
+<td style="text-align: right;">0.5621</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">82</td>
+<td style="text-align: right;">0.5854</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">47</td>
+<td style="text-align: right;">0.7021</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">2.8634</td>
+<td style="text-align: right;">2.1662</td>
+<td style="text-align: right;">1.3219</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">13.5417</td>
+<td style="text-align: right;">9.8537</td>
+<td style="text-align: right;">1.3743</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.6875</td>
+<td style="text-align: right;">0.5732</td>
+<td style="text-align: right;">1.1994</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">1.9062</td>
+<td style="text-align: right;">1.7719</td>
+<td style="text-align: right;">1.0758</td>
+</tr>
+</tbody>
+</table>
+<h3>branch3_decision (Ternary_specific)</h3>
+<p><em>Prise de décision avec branchement ternaire (BRANCH3)</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">552</td>
+<td style="text-align: right;">1178</td>
+<td style="text-align: right;">0.4686</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">312</td>
+<td style="text-align: right;">521</td>
+<td style="text-align: right;">0.5988</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">165</td>
+<td style="text-align: right;">248</td>
+<td style="text-align: right;">0.6653</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">106</td>
+<td style="text-align: right;">162</td>
+<td style="text-align: right;">0.6543</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">0.4157</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">1.1600</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">2.0369</td>
+<td style="text-align: right;">2.8732</td>
+<td style="text-align: right;">0.7089</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">14.9189</td>
+<td style="text-align: right;">13.2360</td>
+<td style="text-align: right;">1.1271</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.7838</td>
+<td style="text-align: right;">0.2809</td>
+<td style="text-align: right;">2.7903</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">1.7692</td>
+<td style="text-align: right;">2.2610</td>
+<td style="text-align: right;">0.7825</td>
+</tr>
+</tbody>
+</table>
+<h3>compact_format (Ternary_specific)</h3>
+<p><em>Comparaison entre format standard et format compact</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">878</td>
+<td style="text-align: right;">1095</td>
+<td style="text-align: right;">0.8018</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">346</td>
+<td style="text-align: right;">506</td>
+<td style="text-align: right;">0.6838</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">158</td>
+<td style="text-align: right;">269</td>
+<td style="text-align: right;">0.5874</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">104</td>
+<td style="text-align: right;">180</td>
+<td style="text-align: right;">0.5778</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1.1500</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">0.6458</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">3.3511</td>
+<td style="text-align: right;">2.4388</td>
+<td style="text-align: right;">1.3741</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">12.7246</td>
+<td style="text-align: right;">18.2500</td>
+<td style="text-align: right;">0.6972</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.4493</td>
+<td style="text-align: right;">0.8000</td>
+<td style="text-align: right;">0.5616</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">2.5376</td>
+<td style="text-align: right;">2.1640</td>
+<td style="text-align: right;">1.1726</td>
+</tr>
+</tbody>
+</table>
+<h3>optimized_memory (Ternary_specific)</h3>
+<p><em>Accès mémoire optimisés avec LOADT3/STORET3 et LOADTM/STORETM</em></p>
+<table>
+<thead>
+<tr>
+<th>Métrique</th>
+<th style="text-align: right;">PrismChrono</th>
+<th style="text-align: right;">x86</th>
+<th style="text-align: right;">Ratio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nombre d'instructions exécutées</td>
+<td style="text-align: right;">736</td>
+<td style="text-align: right;">989</td>
+<td style="text-align: right;">0.7442</td>
+</tr>
+<tr>
+<td>Taille du code exécutable</td>
+<td style="text-align: right;">423</td>
+<td style="text-align: right;">507</td>
+<td style="text-align: right;">0.8343</td>
+</tr>
+<tr>
+<td>Nombre de lectures mémoire</td>
+<td style="text-align: right;">127</td>
+<td style="text-align: right;">281</td>
+<td style="text-align: right;">0.4520</td>
+</tr>
+<tr>
+<td>Nombre d'écritures mémoire</td>
+<td style="text-align: right;">113</td>
+<td style="text-align: right;">169</td>
+<td style="text-align: right;">0.6686</td>
+</tr>
+<tr>
+<td>Nombre de branches</td>
+<td style="text-align: right;">67</td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">0.8072</td>
+</tr>
+<tr>
+<td>Nombre de branches prises</td>
+<td style="text-align: right;">35</td>
+<td style="text-align: right;">39</td>
+<td style="text-align: right;">0.8974</td>
+</tr>
+<tr>
+<td>inst_mem_ratio</td>
+<td style="text-align: right;">3.0667</td>
+<td style="text-align: right;">2.1978</td>
+<td style="text-align: right;">1.3953</td>
+</tr>
+<tr>
+<td>inst_branch_ratio</td>
+<td style="text-align: right;">10.9851</td>
+<td style="text-align: right;">11.9157</td>
+<td style="text-align: right;">0.9219</td>
+</tr>
+<tr>
+<td>branch_taken_ratio</td>
+<td style="text-align: right;">0.5224</td>
+<td style="text-align: right;">0.4699</td>
+<td style="text-align: right;">1.1117</td>
+</tr>
+<tr>
+<td>code_density</td>
+<td style="text-align: right;">1.7400</td>
+<td style="text-align: right;">1.9507</td>
+<td style="text-align: right;">0.8920</td>
+</tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+<p>Cette analyse comparative entre PrismChrono et x86 met en évidence plusieurs points importants:</p>
+<h3>Points Forts de PrismChrono</h3>
+<p>PrismChrono montre des avantages dans les métriques suivantes:
+- <strong>Nombre d'instructions exécutées</strong>: Ratio moyen de 0.7048 (PrismChrono est 29.5% plus efficace)
+- <strong>Taille du code exécutable</strong>: Ratio moyen de 0.7162 (PrismChrono est 28.4% plus efficace)
+- <strong>Nombre de lectures mémoire</strong>: Ratio moyen de 0.5864 (PrismChrono est 41.4% plus efficace)
+- <strong>Nombre d'écritures mémoire</strong>: Ratio moyen de 0.6157 (PrismChrono est 38.4% plus efficace)
+- <strong>Nombre de branches</strong>: Ratio moyen de 0.7396 (PrismChrono est 26.0% plus efficace)
+- <strong>Nombre de branches prises</strong>: Ratio moyen de 0.8513 (PrismChrono est 14.9% plus efficace)
+- <strong>code_density</strong>: Ratio moyen de 0.9807 (PrismChrono est 1.9% plus efficace)</p>
+<h3>Points à Améliorer</h3>
+<p>PrismChrono présente des performances inférieures dans les métriques suivantes:
+- <strong>inst_mem_ratio</strong>: Ratio moyen de 1.2001 (PrismChrono est 20.0% moins efficace)
+- <strong>inst_branch_ratio</strong>: Ratio moyen de 1.0301 (PrismChrono est 3.0% moins efficace)
+- <strong>branch_taken_ratio</strong>: Ratio moyen de 1.4158 (PrismChrono est 41.6% moins efficace)</p>
+<h3>Recommandations</h3>
+<p>Sur la base de cette analyse, voici quelques recommandations pour l'évolution de PrismChrono:</p>
+<ol>
+<li><strong>Optimisation des Points Faibles</strong>: Concentrer les efforts d'optimisation sur les métriques où PrismChrono est moins performant.</li>
+<li><strong>Exploitation des Avantages Ternaires</strong>: Développer davantage les cas d'utilisation où l'architecture ternaire montre des avantages significatifs.</li>
+<li><strong>Benchmarks Supplémentaires</strong>: Créer des benchmarks plus spécifiques pour mieux évaluer les avantages potentiels de l'architecture ternaire.</li>
+<li><strong>Analyse Approfondie</strong>: Examiner en détail les benchmarks où PrismChrono surpasse x86 pour comprendre les facteurs contribuant à cette performance supérieure.</li>
+</ol>
+</body>
+</html>

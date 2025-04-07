@@ -5,11 +5,17 @@
 
 use crate::core_types::Trit;
 
-/// Taille d'une instruction en trits
+/// Taille d'une instruction standard en trits
 pub const INSTRUCTION_SIZE_TRITS: usize = 12;
 
+/// Taille d'une instruction compacte en trits
+pub const COMPACT_INSTRUCTION_SIZE_TRITS: usize = 8;
+
 /// Taille d'une instruction en octets (pour le calcul des adresses)
-pub const INSTRUCTION_SIZE_BYTES: usize = 4;
+pub const INSTRUCTION_SIZE_BYTES: u32 = 4;
+
+/// Taille d'une instruction compacte en octets
+pub const COMPACT_INSTRUCTION_SIZE_BYTES: u32 = 3;
 
 /// Formats d'instructions
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -26,6 +32,8 @@ pub enum InstructionFormat {
     U,
     /// Format J: opcode[2:0] | imm[8:0] | rd[2:0]
     J,
+    /// Format C: op[1:0] | rd/cond[1:0] | rs/offset[3:0] (format compact 8 trits)
+    C,
 }
 
 /// OpCodes pour les différentes instructions
@@ -71,6 +79,17 @@ pub mod opcode {
     // System & CSR
     pub const SYSTEM: [Trit; 3] = [Trit::N, Trit::N, Trit::N]; // ---
     pub const CSR: [Trit; 3] = [Trit::N, Trit::N, Trit::P]; // --+
+    
+    // Format C (Compact)
+    // Ces opcodes sont sur 2 trits au lieu de 3
+    pub mod compact {
+        use crate::core_types::Trit;
+        
+        pub const CMOV: [Trit; 2] = [Trit::N, Trit::N]; // NN (-4)
+        pub const CADD: [Trit; 2] = [Trit::N, Trit::Z]; // NZ (-3)
+        pub const CSUB: [Trit; 2] = [Trit::N, Trit::P]; // NP (-2)
+        pub const CBRANCH: [Trit; 2] = [Trit::Z, Trit::N]; // ZN (-1)
+    }
 }
 
 /// Fonctions pour les instructions de format R
@@ -148,4 +167,12 @@ pub mod imm_limits {
     // Format B: 3 trits signés pour offset (-40 à +40)
     pub const B_MIN: i32 = -40;
     pub const B_MAX: i32 = 40;
+    
+    // Format C: 4 trits signés pour offset (-40 à +40)
+    pub const C_OFFSET_MIN: i32 = -40;
+    pub const C_OFFSET_MAX: i32 = 40;
+    
+    // Format C: 4 trits pour registre (0 à 7)
+    pub const C_REG_MIN: i32 = 0;
+    pub const C_REG_MAX: i32 = 7;
 }

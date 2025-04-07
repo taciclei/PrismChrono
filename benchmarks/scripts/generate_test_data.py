@@ -100,6 +100,26 @@ def generate_test_data(benchmark, platform):
                     "branches": random.randint(36, 72),  # ~28% moins de branches
                     "branches_taken": random.randint(18, 36)  # ~28% moins de branches prises
                 }
+            elif benchmark == "base24_arithmetic":
+                data = {
+                    "benchmark": benchmark,
+                    "instruction_count": random.randint(500, 780),  # ~40% moins d'instructions
+                    "code_size": random.randint(270, 410),  # ~32% moins de taille de code
+                    "memory_reads": random.randint(130, 210),  # ~35% moins de lectures
+                    "memory_writes": random.randint(65, 130),  # ~35% moins d'écritures
+                    "branches": random.randint(32, 65),  # ~35% moins de branches
+                    "branches_taken": random.randint(16, 33)  # ~35% moins de branches prises
+                }
+            elif benchmark == "special_states":
+                data = {
+                    "benchmark": benchmark,
+                    "instruction_count": random.randint(530, 830),  # ~37% moins d'instructions
+                    "code_size": random.randint(280, 420),  # ~30% moins de taille de code
+                    "memory_reads": random.randint(140, 230),  # ~30% moins de lectures
+                    "memory_writes": random.randint(70, 140),  # ~30% moins d'écritures
+                    "branches": random.randint(30, 60),  # ~40% moins de branches
+                    "branches_taken": random.randint(15, 30)  # ~40% moins de branches prises
+                }
             else:
                 data = {
                     "benchmark": benchmark,

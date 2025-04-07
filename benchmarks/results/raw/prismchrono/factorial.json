@@ -1,9 +1,1 @@
-{
-  "benchmark": "factorial",
-  "instruction_count": 1117,
-  "code_size": 485,
-  "memory_reads": 271,
-  "memory_writes": 123,
-  "branches": 59,
-  "branches_taken": 47
-}
+{"benchmark": "factorial", "instruction_count": 0, "memory_reads": 0, "memory_writes": 0, "code_size": 0, "branches": 0, "branches_taken": 0}

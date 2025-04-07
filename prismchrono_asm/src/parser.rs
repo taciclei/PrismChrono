@@ -40,6 +40,11 @@ impl Parser {
 
     /// Analyse une ligne de code
     fn parse_line(&mut self) -> Result<AstNode, AssemblerError> {
+        // Ignorer les commentaires
+        while self.check_type(|t| matches!(t, TokenType::Comment(_))) {
+            self.advance(); // Consommer le commentaire
+        }
+        
         // Ignorer les lignes vides
         if self.check(TokenType::EOL) {
             self.advance(); // Consommer EOL
@@ -51,6 +56,11 @@ impl Parser {
             let label_name = label.clone();
             self.advance(); // Consommer le label
 
+            // Ignorer les commentaires après le label
+            while self.check_type(|t| matches!(t, TokenType::Comment(_))) {
+                self.advance(); // Consommer le commentaire
+            }
+
             // Si la ligne ne contient que le label, retourner un nœud Label
             if self.check(TokenType::EOL) {
                 self.advance(); // Consommer EOL
@@ -58,13 +68,19 @@ impl Parser {
             }
 
             // Sinon, traiter le reste de la ligne et retourner un nœud Label
-            let node = self.parse_line()?;
+            let _node = self.parse_line()?;
             return Ok(AstNode::Label(label_name));
         }
 
         // Vérifier s'il y a une directive
         if let TokenType::Directive(directive) = &self.current_token().token_type {
             let directive_node = self.parse_directive(directive.clone())?;
+            
+            // Ignorer les commentaires après la directive
+            while self.check_type(|t| matches!(t, TokenType::Comment(_))) {
+                self.advance(); // Consommer le commentaire
+            }
+            
             self.consume(TokenType::EOL, "Attendu fin de ligne après directive")?;
             return Ok(AstNode::Directive(directive_node));
         }
@@ -72,6 +88,12 @@ impl Parser {
         // Vérifier s'il y a une instruction
         if let TokenType::Mnemonic(mnemonic) = &self.current_token().token_type {
             let instruction_node = self.parse_instruction(mnemonic.clone())?;
+            
+            // Ignorer les commentaires après l'instruction
+            while self.check_type(|t| matches!(t, TokenType::Comment(_))) {
+                self.advance(); // Consommer le commentaire
+            }
+            
             self.consume(TokenType::EOL, "Attendu fin de ligne après instruction")?;
             return Ok(AstNode::Instruction(instruction_node));
         }
@@ -311,6 +333,17 @@ impl Parser {
             (TokenType::Comma, TokenType::Comma) => true,
             _ => false,
         }
+    }
+
+    /// Vérifie si le token courant correspond à un prédicat donné
+    fn check_type<F>(&self, predicate: F) -> bool
+    where
+        F: Fn(&TokenType) -> bool,
+    {
+        if self.is_at_end() {
+            return false;
+        }
+        predicate(&self.current_token().token_type)
     }
 
     /// Consomme le token courant s'il est du type spécifié, sinon génère une erreur

@@ -1,9 +1,9 @@
 {
   "benchmark": "factorial",
-  "instruction_count": 1000,
-  "code_size": 452,
-  "memory_reads": 260,
-  "memory_writes": 195,
-  "branches": 73,
-  "branches_taken": 26
+  "code_size": 0,
+  "instruction_count": 0,
+  "memory_reads": 0,
+  "memory_writes": 0,
+  "branches": 0,
+  "branches_taken": 0
 }

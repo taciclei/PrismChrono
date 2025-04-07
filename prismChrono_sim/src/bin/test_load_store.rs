@@ -2,12 +2,11 @@
 // Programme de test pour les instructions Load/Store - Sprint 7
 // Ce programme teste les opérations de chargement et stockage en mémoire
 
-use prismchrono_sim::core::{Trit, Tryte, Word};
+use prismchrono_sim::core::{Tryte, Word};
 use prismchrono_sim::cpu::execute::Cpu;
 use prismchrono_sim::cpu::execute_mem::MemoryOperations;
-use prismchrono_sim::cpu::isa::{Instruction, Opcode};
+use prismchrono_sim::cpu::isa::Instruction;
 use prismchrono_sim::cpu::registers::Register;
-use prismchrono_sim::memory::Memory;
 
 fn main() {
     println!("🏳️‍🌈 Architecture PrismChrono - Test des instructions Load/Store (Sprint 7)");

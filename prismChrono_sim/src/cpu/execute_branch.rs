@@ -4,9 +4,8 @@
 use crate::alu::add_24_trits;
 use crate::core::{Trit, Tryte, Word, is_valid_address};
 use crate::cpu::execute::ExecuteError;
-use crate::cpu::execute_core::Cpu;
-use crate::cpu::isa::Condition;
-use crate::cpu::registers::{Flags, Register};
+use crate::cpu::isa::BranchCondition;
+use crate::cpu::registers::Register;
 use crate::cpu::state::CpuState;
 
 // Le trait CpuState est maintenant importé depuis le module state
@@ -17,7 +16,7 @@ pub trait BranchOperations {
     fn execute_branch(
         &mut self,
         _rs1: Register,
-        cond: Condition,
+        cond: BranchCondition,
         offset: i8,
     ) -> Result<(), ExecuteError>;
 
@@ -39,7 +38,7 @@ impl<T: CpuState> BranchOperations for T {
     fn execute_branch(
         &mut self,
         _rs1: Register,
-        cond: Condition,
+        cond: BranchCondition,
         offset: i8,
     ) -> Result<(), ExecuteError> {
         // Incrémenter le compteur de branchements totaux
@@ -52,14 +51,14 @@ impl<T: CpuState> BranchOperations for T {
 
         // 2. Évaluer la condition
         let condition_met = match cond {
-            Condition::Eq => flags.zf,              // Égal (ZF = 1)
-            Condition::Ne => !flags.zf,             // Non égal (ZF = 0)
-            Condition::Lt => flags.sf,              // Inférieur (SF = 1)
-            Condition::Ge => !flags.sf || flags.zf, // Supérieur ou égal (SF = 0 ou ZF = 1)
-            Condition::Ltu => flags.zf, // Inférieur non signé (utiliser ZF au lieu de CF)
-            Condition::Geu => !flags.zf, // Supérieur ou égal non signé (utiliser ZF au lieu de CF)
-            Condition::Special => flags.xf, // État spécial (XF = 1)
-            Condition::Always => true,  // Toujours vrai
+            BranchCondition::Zero => flags.zf,              // Égal (ZF = 1)
+            BranchCondition::NonZero => !flags.zf,             // Non égal (ZF = 0)
+            BranchCondition::Negative => flags.sf,              // Inférieur (SF = 1)
+            BranchCondition::Positive => !flags.sf, // Supérieur ou égal (SF = 0)
+            BranchCondition::Overflow => flags.of, // Débordement (OF = 1)
+            BranchCondition::Carry => flags.cf, // Reprise (CF = 1)
+            BranchCondition::True => true,  // Toujours vrai
+            BranchCondition::False => false, // Toujours faux
         };
 
         // 3. Si la condition est remplie, calculer la nouvelle adresse PC

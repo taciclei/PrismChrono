@@ -1,9 +1,1 @@
-{
-  "benchmark": "memcpy",
-  "instruction_count": 1214,
-  "code_size": 459,
-  "memory_reads": 259,
-  "memory_writes": 117,
-  "branches": 99,
-  "branches_taken": 38
-}
+{"benchmark": "memcpy", "instruction_count": 0, "memory_reads": 0, "memory_writes": 0, "code_size": 0, "branches": 0, "branches_taken": 0}

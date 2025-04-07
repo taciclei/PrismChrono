@@ -112,6 +112,66 @@ impl Tryte {
         let bal3 = t2 * 9 + t1 * 3 + t0;
         Tryte::from_bal3(bal3).unwrap_or(Tryte::NaN) // Retourner NaN si la combinaison est invalide (ne devrait pas arriver)
     }
+
+    // Récupérer un trit spécifique (0, 1, ou 2) de ce Tryte
+    pub fn get_trit(&self, index: usize) -> Trit {
+        if index > 2 {
+            return Trit::Z; // Indice invalide, retourne zéro
+        }
+        
+        let trits = self.to_trits();
+        trits[index]
+    }
+
+    /// Convertit un Tryte en i8 pour les calculs arithmétiques
+    pub fn to_i8(&self) -> i8 {
+        match self {
+            Tryte::Digit(d) => (*d as i8) - 13, // Convertir 0-23 en -13 à +10
+            Tryte::Undefined => 11,
+            Tryte::Null => 12,
+            Tryte::NaN => 13,
+        }
+    }
+    
+    /// Crée un Tryte à partir d'une valeur i8
+    pub fn from_i8(val: i8) -> Tryte {
+        if val >= -13 && val <= 10 {
+            Tryte::Digit((val + 13) as u8)
+        } else if val == 11 {
+            Tryte::Undefined
+        } else if val == 12 {
+            Tryte::Null
+        } else if val == 13 {
+            Tryte::NaN
+        } else {
+            // Valeurs hors plage sont converties en NaN
+            Tryte::NaN
+        }
+    }
+
+    /// Vérifie si le tryte est une valeur NULL (représentation spécifique)
+    pub fn is_null(&self) -> bool {
+        match self {
+            Tryte::Null => true,
+            _ => false
+        }
+    }
+    
+    /// Vérifie si le tryte est une valeur NaN (Not a Number, représentation spécifique)
+    pub fn is_nan(&self) -> bool {
+        match self {
+            Tryte::NaN => true,
+            _ => false
+        }
+    }
+    
+    /// Vérifie si le tryte est une valeur UNDEF (non définie, représentation spécifique)
+    pub fn is_undef(&self) -> bool {
+        match self {
+            Tryte::Undefined => true,
+            _ => false
+        }
+    }
 }
 
 // Affichage (ex: chiffre B24 ou nom de l'état spécial)
@@ -127,6 +187,12 @@ impl fmt::Display for Tryte {
     }
 }
 
+impl Default for Tryte {
+    fn default() -> Self {
+        Tryte::Digit(13) // 13 correspond à la valeur zéro en ternaire équilibré
+    }
+}
+
 // --- Word (24 Trits = 8 Trytes) ---
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Word(pub [Tryte; 8]); // Ajoute 'pub' devant le champ
@@ -136,9 +202,17 @@ impl Word {
     pub fn default_undefined() -> Self {
         Word([Tryte::Undefined; 8])
     }
+    // Alias pour default_undefined pour compatibilité
+    pub fn undefined() -> Self {
+        Word([Tryte::Undefined; 8])
+    }
     // Crée un mot zéro (tous trits Z, ce qui correspond à 8 trytes '13')
     pub fn zero() -> Self {
         Word([Tryte::Digit(13); 8]) // Tryte 13 a Bal3 = 0, donc (Z,Z,Z)
+    }
+    // Alias pour zero pour compatibilité
+    pub fn default_zero() -> Self {
+        Word::zero()
     }
     // Accès aux trytes individuels
     pub fn tryte(&self, index: usize) -> Option<&Tryte> {
@@ -192,6 +266,11 @@ impl Word {
 
         word
     }
+    
+    // Alias de from_int pour compatibilité avec le code existant
+    pub fn from_i32(val: i32) -> Self {
+        Self::from_int(val)
+    }
 
     // Crée un Word à partir d'une valeur ternaire équilibrée (Bal3)
     pub fn from_bal3(val: i8) -> Self {
@@ -203,6 +282,11 @@ impl Word {
         }
 
         word
+    }
+
+    // Crée un Word à partir d'une valeur i16
+    pub fn from_i16(val: i16) -> Self {
+        Self::from_int(val as i32)
     }
 
     // Vérifie si le mot est négatif (trit de poids fort = N)
@@ -222,6 +306,57 @@ impl Word {
         // Si tous les trytes sont nuls, le mot n'est pas négatif
         false
     }
+    
+    // Convertit un mot ternaire en entier i32
+    pub fn to_i32(&self) -> i32 {
+        // Convertir l'entrée en valeur entière
+        self.trytes().iter().enumerate().fold(0, |acc, (i, tryte)| {
+            let val = tryte.bal3_value() as i32;
+            acc + val * 27i32.pow(i as u32)
+        })
+    }
+
+    // Récupère un trit spécifique à l'index donné dans le mot
+    pub fn get_trit(&self, index: usize) -> Trit {
+        let tryte_index = index / 3;
+        let trit_index = index % 3;
+        
+        if let Some(tryte) = self.tryte(tryte_index) {
+            tryte.get_trit(trit_index)
+        } else {
+            Trit::Z // Valeur par défaut
+        }
+    }
+
+    // Définit un trit spécifique à l'index donné dans le mot
+    pub fn set_trit(&mut self, index: usize, trit: Trit) {
+        let tryte_index = index / 3;
+        let trit_index = index % 3;
+        
+        if let Some(tryte_mut) = self.tryte_mut(tryte_index) {
+            // Récupérer les trits actuels
+            let mut trits = tryte_mut.to_trits();
+            // Modifier le trit spécifié
+            trits[trit_index] = trit;
+            // Recréer le tryte
+            *tryte_mut = Tryte::from_trits(trits);
+        }
+    }
+
+    /// Définit un tryte complet à l'index spécifié
+    pub fn set_tryte(&mut self, index: usize, tryte: Tryte) {
+        if index < 8 {
+            self.0[index] = tryte;
+        }
+    }
+    
+    /// Unwrap un Result<Word, E> ou retourne une valeur par défaut
+    pub fn unwrap_or_default<E>(result: Result<Word, E>) -> Word {
+        match result {
+            Ok(word) => word,
+            Err(_) => Word::zero(),
+        }
+    }
 }
 
 // Affichage (ex: séquence de 8 trytes)
@@ -238,10 +373,9 @@ impl fmt::Display for Word {
     }
 }
 
-// Implémente Default pour pouvoir utiliser .default() ou dériver sur d'autres structs
 impl Default for Word {
     fn default() -> Self {
-        Word::default_undefined() // Ou Word::zero() selon la sémantique voulue
+        Word::zero()
     }
 }
 

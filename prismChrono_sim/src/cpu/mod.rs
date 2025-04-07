@@ -5,6 +5,8 @@ pub mod decode;
 pub mod isa;
 pub mod registers;
 pub mod state;
+pub mod supervisor_privilege;
+pub mod isa_extensions;
 
 // Modules d'exécution par catégorie d'instructions
 pub mod execute_alu;
@@ -23,8 +25,4 @@ pub mod execute;
 mod tests;
 
 // Re-exporte les types et structures importantes pour faciliter l'accès
-pub use decode::{DecodeError, decode};
-pub use execute::{Cpu, ExecuteError};
-pub use isa::{AluOp, Condition, Instruction, InstructionFormat, Opcode};
 pub use registers::{Flags, ProcessorState, Register};
-pub use compact_format::{CompactOp, CompactInstruction, decode_compact, compact_to_standard};

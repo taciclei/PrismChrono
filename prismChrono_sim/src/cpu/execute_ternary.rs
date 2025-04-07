@@ -1,487 +1,338 @@
 // src/cpu/execute_ternary.rs
 // Implémentation des instructions ternaires spécialisées pour l'architecture PrismChrono
 
-use crate::types::{Trit, Word, Address};
-use crate::cpu::registers::RegisterFile;
-use crate::memory::Memory;
+use crate::core::{Trit, Word};
+use crate::cpu::registers::Register;
 use crate::cpu::execute_core::ExecuteError;
+use crate::cpu::state::CpuState;
 use crate::cpu::isa_extensions::{TernaryOp, TernaryShiftOp, SpecialStateOp, Base24Op};
-use crate::cpu::isa_extensions::{execute_ternary_op, execute_ternary_shift, execute_special_state_op, execute_tsel, execute_base24_op};
+use crate::cpu::isa_extensions::{execute_ternary_op as ext_execute_ternary_op, 
+                               execute_ternary_shift as ext_execute_ternary_shift, 
+                               execute_special_state_op as ext_execute_special_state_op, 
+                               execute_tsel as ext_execute_tsel, 
+                               execute_base24_op as ext_execute_base24_op};
+use crate::alu::{add_24_trits, sub_24_trits, mul_24_trits};
 
 /// Trait pour l'exécution des instructions ternaires spécialisées
 pub trait ExecuteTernary {
     /// Exécute une instruction ternaire spécialisée (TMIN, TMAX, TSUM, TCMP3)
-    fn execute_ternary_instruction(&mut self, op: TernaryOp, rs1: usize, rs2: usize, rd: usize) -> Result<(), ExecuteError>;
+    fn execute_ternary(&mut self, op: TernaryOp, rs1: Register, rs2: Register, rd: Register) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction de rotation ou décalage ternaire
-    fn execute_ternary_shift(&mut self, op: TernaryShiftOp, rs1: usize, rd: usize, imm: i32) -> Result<(), ExecuteError>;
+    fn execute_ternary_shift(&mut self, op: TernaryShiftOp, rs1: Register, rd: Register, imm: i32) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction de branchement ternaire (BRANCH3)
-    fn execute_branch3(&mut self, rs1: usize, offset_neg: i32, offset_zero: i32, offset_pos: i32) -> Result<(), ExecuteError>;
+    fn execute_branch3(&mut self, rs1: Register, offset_n: i32, offset_z: i32, offset_p: i32) -> Result<(), ExecuteError>;
     
-    /// Exécute une instruction de chargement de 3 trytes consécutifs
-    fn execute_load_t3(&mut self, rd: usize, rs1: usize, offset: i32) -> Result<(), ExecuteError>;
+    /// Charge 3 trytes consécutifs depuis la mémoire
+    fn execute_load_tryte3(&mut self, rd: Register, rs1: Register, offset: i32) -> Result<(), ExecuteError>;
     
-    /// Exécute une instruction de stockage de 3 trytes consécutifs
-    fn execute_store_t3(&mut self, rs1: usize, rs2: usize, offset: i32) -> Result<(), ExecuteError>;
+    /// Stocke 3 trytes consécutifs en mémoire
+    fn execute_store_tryte3(&mut self, rs1: Register, rs2: Register, offset: i32) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction de chargement avec masque de trytes
-    fn execute_load_tm(&mut self, rd: usize, rs1: usize, mask: u8, offset: i32) -> Result<(), ExecuteError>;
+    fn execute_load_tm(&mut self, rd: Register, rs1: Register, mask: u8, offset: i32) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction de stockage avec masque de trytes
-    fn execute_store_tm(&mut self, rs1: usize, rs2: usize, mask: u8, offset: i32) -> Result<(), ExecuteError>;
+    fn execute_store_tm(&mut self, rs1: Register, rs2: Register, mask: u8, offset: i32) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction de copie mémoire ternaire
-    fn execute_tmemcpy(&mut self, rd: usize, rs1: usize, rs2: usize) -> Result<(), ExecuteError>;
+    fn execute_tmemcpy(&mut self, rd: Register, rs1: Register, rs2: Register) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction d'initialisation mémoire ternaire
-    fn execute_tmemset(&mut self, rd: usize, rs1: usize, rs2: usize) -> Result<(), ExecuteError>;
+    fn execute_tmemset(&mut self, rd: Register, rs1: Register, rs2: Register) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction multi-opération (multiplication-addition)
-    fn execute_maddw(&mut self, rd: usize, rs1: usize, rs2: usize, rs3: usize) -> Result<(), ExecuteError>;
+    fn execute_maddw(&mut self, rd: Register, rs1: Register, rs2: Register, rs3: Register) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction multi-opération (multiplication-soustraction)
-    fn execute_msubw(&mut self, rd: usize, rs1: usize, rs2: usize, rs3: usize) -> Result<(), ExecuteError>;
+    fn execute_msubw(&mut self, rd: Register, rs1: Register, rs2: Register, rs3: Register) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction pour les états spéciaux
-    fn execute_special_state(&mut self, op: SpecialStateOp, rs1: usize, rd: usize) -> Result<(), ExecuteError>;
+    fn execute_special_state(&mut self, op: SpecialStateOp, rs1: Register, rd: Register) -> Result<(), ExecuteError>;
     
     /// Exécute une instruction de sélection ternaire
-    fn execute_tsel(&mut self, rd: usize, rs1: usize, rs2: usize, rs3: usize) -> Result<(), ExecuteError>;
+    fn execute_tsel(&mut self, rd: Register, rs1: Register, rs2: Register, rs3: Register) -> Result<(), ExecuteError>;
     
-    /// Exécute une instruction arithmétique en base 24
-    fn execute_base24(&mut self, op: Base24Op, rs1: usize, rs2: usize, rd: usize) -> Result<(), ExecuteError>;
+    /// Exécute une instruction de base 24
+    fn execute_base24(&mut self, op: Base24Op, rs1: Register, rs2: Register, rd: Register) -> Result<(), ExecuteError>;
 }
 
-/// Implémentation du trait ExecuteTernary pour le CPU
-impl<M: Memory> ExecuteTernary for crate::cpu::CPU<M> {
+/// Implémentation des instructions ternaires pour le CPU
+impl<T: CpuState> ExecuteTernary for T {
     /// Exécute une instruction ternaire spécialisée (TMIN, TMAX, TSUM, TCMP3)
-    fn execute_ternary_instruction(&mut self, op: TernaryOp, rs1: usize, rs2: usize, rd: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rs2 >= 8 || rd >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
-        
-        // Lire les valeurs des registres sources
-        let a = self.registers.read(rs1);
-        let b = self.registers.read(rs2);
+    fn execute_ternary(&mut self, op: TernaryOp, rs1: Register, rs2: Register, rd: Register) -> Result<(), ExecuteError> {
+        // Lire les valeurs des registres
+        let a = self.read_gpr(rs1);
+        let b = self.read_gpr(rs2);
         
         // Exécuter l'opération ternaire
-        let result = execute_ternary_op(op, a, b);
+        let result = ext_execute_ternary_op(op, a, b);
         
-        // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Mettre à jour les flags si nécessaire
-        self.update_flags_from_result(&result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.ternary_ops += 1;
-        
+        // Écrire le résultat
+        self.write_gpr(rd, result);
         Ok(())
     }
     
     /// Exécute une instruction de rotation ou décalage ternaire
-    fn execute_ternary_shift(&mut self, op: TernaryShiftOp, rs1: usize, rd: usize, imm: i32) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rd >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_ternary_shift(&mut self, op: TernaryShiftOp, rs1: Register, rd: Register, imm: i32) -> Result<(), ExecuteError> {
+        // Lire la valeur du registre
+        let a = self.read_gpr(rs1);
         
-        // Lire la valeur du registre source
-        let a = self.registers.read(rs1);
+        // Exécuter l'opération de décalage
+        let result = ext_execute_ternary_shift(op, a, imm);
         
-        // Exécuter l'opération de rotation ou décalage
-        let result = execute_ternary_shift(op, a, imm);
-        
-        // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Mettre à jour les flags si nécessaire
-        self.update_flags_from_result(&result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.shift_ops += 1;
-        
+        // Écrire le résultat
+        self.write_gpr(rd, result);
         Ok(())
     }
     
-    /// Exécute une instruction de branchement ternaire (BRANCH3)
-    fn execute_branch3(&mut self, rs1: usize, offset_neg: i32, offset_zero: i32, offset_pos: i32) -> Result<(), ExecuteError> {
-        // Vérifier la validité du registre
-        if rs1 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    /// Exécute un branchement ternaire à 3 voies
+    fn execute_branch3(&mut self, rs1: Register, offset_n: i32, offset_z: i32, offset_p: i32) -> Result<(), ExecuteError> {
+        // Lire la valeur du registre
+        let value = self.read_gpr(rs1);
         
-        // Lire la valeur du registre source
-        let value = self.registers.read(rs1);
-        
-        // Déterminer l'offset en fonction de la valeur du premier trit
-        let offset = match value.get_trit(0).value() {
-            -1 => offset_neg,
-            0 => offset_zero,
-            1 => offset_pos,
-            _ => 0, // Ne devrait jamais arriver
+        // Déterminer l'offset en fonction de la valeur du registre
+        let offset = if value.is_negative() {
+            offset_n
+        } else if value == Word::zero() {
+            offset_z
+        } else {
+            offset_p
         };
         
-        // Calculer la nouvelle adresse
-        let pc = self.registers.read_pc();
-        let new_pc = pc + (offset * 4) as u32; // 4 trytes par instruction
-        
         // Mettre à jour le PC
-        self.registers.write_pc(new_pc);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.branches_total += 1;
-        self.metrics.branches_taken += 1;
+        let pc = self.read_pc();
+        let new_pc = Word::from_i32((pc.to_i32() + offset) as i32);
+        self.write_pc(new_pc);
         
         Ok(())
     }
     
-    /// Exécute une instruction de chargement de 3 trytes consécutifs
-    fn execute_load_t3(&mut self, rd: usize, rs1: usize, offset: i32) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rd >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    /// Charge 3 trytes consécutifs depuis la mémoire
+    fn execute_load_tryte3(&mut self, rd: Register, rs1: Register, offset: i32) -> Result<(), ExecuteError> {
+        // Calculer l'adresse de base
+        let base = self.read_gpr(rs1).to_i32();
+        let addr = (base + offset) as u32;
         
-        // Lire l'adresse de base
-        let base_addr = self.registers.read(rs1).to_u32();
-        
-        // Calculer l'adresse effective
-        let addr = base_addr.wrapping_add(offset as u32);
-        
-        // Créer un mot pour stocker le résultat
-        let mut result = Word::new();
+        // Créer un nouveau mot pour stocker les trytes chargés
+        let mut result = Word::zero();
         
         // Charger 3 trytes consécutifs
         for i in 0..3 {
-            let tryte = self.memory.read_tryte(addr.wrapping_add(i as u32))
-                .map_err(|e| ExecuteError::MemoryError(e))?;
+            // Lire le tryte depuis la mémoire
+            let loaded_tryte = self.read_tryte(addr as usize + i as usize)?;
             
-            result.set_tryte(i, tryte);
+            // Stocker le tryte dans le mot résultat
+            if let Some(tryte) = result.tryte_mut(i) {
+                *tryte = loaded_tryte;
+            }
         }
         
-        // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.memory_reads += 3;
-        
+        // Écrire le résultat dans le registre de destination
+        self.write_gpr(rd, result);
         Ok(())
     }
     
-    /// Exécute une instruction de stockage de 3 trytes consécutifs
-    fn execute_store_t3(&mut self, rs1: usize, rs2: usize, offset: i32) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rs2 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    /// Stocke 3 trytes consécutifs en mémoire
+    fn execute_store_tryte3(&mut self, rs1: Register, rs2: Register, offset: i32) -> Result<(), ExecuteError> {
+        // Calculer l'adresse de base
+        let base = self.read_gpr(rs1).to_i32();
+        let addr = (base + offset) as usize;
         
-        // Lire l'adresse de base et la valeur à stocker
-        let base_addr = self.registers.read(rs1).to_u32();
-        let value = self.registers.read(rs2);
-        
-        // Calculer l'adresse effective
-        let addr = base_addr.wrapping_add(offset as u32);
+        // Lire la valeur à stocker
+        let value = self.read_gpr(rs2);
         
         // Stocker 3 trytes consécutifs
         for i in 0..3 {
-            let tryte = value.get_tryte(i);
-            self.memory.write_tryte(addr.wrapping_add(i as u32), tryte)
-                .map_err(|e| ExecuteError::MemoryError(e))?;
+            if let Some(tryte) = value.tryte(i) {
+                let tryte_addr = addr + i;
+                self.write_tryte(tryte_addr, *tryte)?;
+            }
         }
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.memory_writes += 3;
         
         Ok(())
     }
     
     /// Exécute une instruction de chargement avec masque de trytes
-    fn execute_load_tm(&mut self, rd: usize, rs1: usize, mask: u8, offset: i32) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rd >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
-        
+    fn execute_load_tm(&mut self, rd: Register, rs1: Register, mask: u8, offset: i32) -> Result<(), ExecuteError> {
         // Lire l'adresse de base
-        let base_addr = self.registers.read(rs1).to_u32();
+        let base = self.read_gpr(rs1).to_i32();
+        let addr = (base + offset) as usize;
         
-        // Calculer l'adresse effective
-        let addr = base_addr.wrapping_add(offset as u32);
-        
-        // Créer un mot pour stocker le résultat
-        let mut result = Word::new();
+        // Créer un nouveau mot pour stocker les trytes chargés
+        let mut result = Word::zero();
         
         // Charger les trytes selon le masque
-        let mut reads = 0;
         for i in 0..8 {
-            if (mask & (1 << i)) != 0 {
-                let tryte = self.memory.read_tryte(addr.wrapping_add(i as u32))
-                    .map_err(|e| ExecuteError::MemoryError(e))?;
+            if (mask >> i) & 1 == 1 {
+                // Le bit i du masque est actif, charger le tryte
+                let tryte_addr = addr + i;
+                let loaded_tryte = self.read_tryte(tryte_addr)?;
                 
-                result.set_tryte(i, tryte);
-                reads += 1;
+                // Stocker le tryte dans le mot résultat
+                if let Some(tryte) = result.tryte_mut(i) {
+                    *tryte = loaded_tryte;
+                }
             }
         }
         
         // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.memory_reads += reads;
-        
+        self.write_gpr(rd, result);
         Ok(())
     }
     
     /// Exécute une instruction de stockage avec masque de trytes
-    fn execute_store_tm(&mut self, rs1: usize, rs2: usize, mask: u8, offset: i32) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rs2 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_store_tm(&mut self, rs1: Register, rs2: Register, mask: u8, offset: i32) -> Result<(), ExecuteError> {
+        // Lire l'adresse de base
+        let base = self.read_gpr(rs1).to_i32();
+        let addr = (base + offset) as usize;
         
-        // Lire l'adresse de base et la valeur à stocker
-        let base_addr = self.registers.read(rs1).to_u32();
-        let value = self.registers.read(rs2);
-        
-        // Calculer l'adresse effective
-        let addr = base_addr.wrapping_add(offset as u32);
+        // Lire la valeur à stocker
+        let value = self.read_gpr(rs2);
         
         // Stocker les trytes selon le masque
-        let mut writes = 0;
         for i in 0..8 {
-            if (mask & (1 << i)) != 0 {
-                let tryte = value.get_tryte(i);
-                self.memory.write_tryte(addr.wrapping_add(i as u32), tryte)
-                    .map_err(|e| ExecuteError::MemoryError(e))?;
-                
-                writes += 1;
+            if (mask >> i) & 1 == 1 {
+                // Le bit i du masque est actif, stocker le tryte
+                if let Some(tryte) = value.tryte(i) {
+                    let tryte_addr = addr + i;
+                    self.write_tryte(tryte_addr, *tryte)?;
+                }
             }
         }
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.memory_writes += writes;
         
         Ok(())
     }
     
     /// Exécute une instruction de copie mémoire ternaire
-    fn execute_tmemcpy(&mut self, rd: usize, rs1: usize, rs2: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rd >= 8 || rs1 >= 8 || rs2 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_tmemcpy(&mut self, rd: Register, rs1: Register, rs2: Register) -> Result<(), ExecuteError> {
+        // Lire l'adresse source
+        let src_addr = self.read_gpr(rs1).to_i32() as usize;
         
-        // Lire les adresses source et destination, et la taille
-        let dest_addr = self.registers.read(rd).to_u32();
-        let src_addr = self.registers.read(rs1).to_u32();
-        let size = self.registers.read(rs2).to_u32();
+        // Lire l'adresse destination
+        let dst_addr = self.read_gpr(rd).to_i32() as usize;
         
-        // Limiter la taille pour éviter les boucles infinies
-        let max_size = 1024; // Limite arbitraire
-        let size = std::cmp::min(size, max_size);
+        // Lire la taille à copier (en trytes)
+        let size = self.read_gpr(rs2).to_i32() as usize;
         
-        // Copier les trytes un par un
+        // Copier les trytes
         for i in 0..size {
-            let tryte = self.memory.read_tryte(src_addr.wrapping_add(i))
-                .map_err(|e| ExecuteError::MemoryError(e))?;
-            
-            self.memory.write_tryte(dest_addr.wrapping_add(i), tryte)
-                .map_err(|e| ExecuteError::MemoryError(e))?;
+            let tryte = self.read_tryte(src_addr + i)?;
+            self.write_tryte(dst_addr + i, tryte)?;
         }
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.memory_reads += size as u64;
-        self.metrics.memory_writes += size as u64;
         
         Ok(())
     }
     
     /// Exécute une instruction d'initialisation mémoire ternaire
-    fn execute_tmemset(&mut self, rd: usize, rs1: usize, rs2: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rd >= 8 || rs1 >= 8 || rs2 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_tmemset(&mut self, rd: Register, rs1: Register, rs2: Register) -> Result<(), ExecuteError> {
+        // Lire l'adresse destination
+        let dst_addr = self.read_gpr(rd).to_i32() as usize;
         
-        // Lire l'adresse de destination, la valeur et la taille
-        let dest_addr = self.registers.read(rd).to_u32();
-        let value = self.registers.read(rs1);
-        let size = self.registers.read(rs2).to_u32();
+        // Lire la valeur à écrire
+        let value = self.read_gpr(rs1);
         
-        // Limiter la taille pour éviter les boucles infinies
-        let max_size = 1024; // Limite arbitraire
-        let size = std::cmp::min(size, max_size);
+        // Lire la taille à initialiser (en trytes)
+        let size = self.read_gpr(rs2).to_i32() as usize;
         
-        // Initialiser les trytes un par un
+        // Initialiser les trytes
         for i in 0..size {
-            // Utiliser le premier tryte de la valeur comme valeur d'initialisation
-            let tryte = value.get_tryte(0);
-            
-            self.memory.write_tryte(dest_addr.wrapping_add(i), tryte)
-                .map_err(|e| ExecuteError::MemoryError(e))?;
+            // Utiliser le premier tryte de la valeur pour initialiser
+            if let Some(tryte) = value.tryte(0) {
+                self.write_tryte(dst_addr + i, *tryte)?;
+            }
         }
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.memory_writes += size as u64;
         
         Ok(())
     }
     
     /// Exécute une instruction multi-opération (multiplication-addition)
-    fn execute_maddw(&mut self, rd: usize, rs1: usize, rs2: usize, rs3: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rd >= 8 || rs1 >= 8 || rs2 >= 8 || rs3 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_maddw(&mut self, rd: Register, rs1: Register, rs2: Register, rs3: Register) -> Result<(), ExecuteError> {
+        // Lire les valeurs des registres
+        let a = self.read_gpr(rs1);
+        let b = self.read_gpr(rs2);
+        let c = self.read_gpr(rs3);
         
-        // Lire les valeurs des registres sources
-        let a = self.registers.read(rs1).to_i32();
-        let b = self.registers.read(rs2).to_i32();
-        let c = self.registers.read(rs3).to_i32();
+        // Calculer a * b + c
+        let product = mul_24_trits(a, b);
+        let (result, _, _) = add_24_trits(product, c, Trit::Z);
         
-        // Calculer le résultat (a * b + c)
-        let result = a.wrapping_mul(b).wrapping_add(c);
-        
-        // Convertir le résultat en Word et l'écrire dans le registre destination
-        let result_word = Word::from_i32(result);
-        self.registers.write(rd, result_word);
-        
-        // Mettre à jour les flags si nécessaire
-        self.update_flags_from_result(&result_word);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.alu_ops += 2; // Une multiplication et une addition
-        
+        // Écrire le résultat dans le registre destination
+        self.write_gpr(rd, result);
         Ok(())
     }
     
     /// Exécute une instruction multi-opération (multiplication-soustraction)
-    fn execute_msubw(&mut self, rd: usize, rs1: usize, rs2: usize, rs3: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rd >= 8 || rs1 >= 8 || rs2 >= 8 || rs3 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_msubw(&mut self, rd: Register, rs1: Register, rs2: Register, rs3: Register) -> Result<(), ExecuteError> {
+        // Lire les valeurs des registres
+        let a = self.read_gpr(rs1);
+        let b = self.read_gpr(rs2);
+        let c = self.read_gpr(rs3);
         
-        // Lire les valeurs des registres sources
-        let a = self.registers.read(rs1).to_i32();
-        let b = self.registers.read(rs2).to_i32();
-        let c = self.registers.read(rs3).to_i32();
+        // Calculer a * b - c
+        let product = mul_24_trits(a, b);
+        let (result, _, _) = sub_24_trits(product, c, Trit::Z);
         
-        // Calculer le résultat (a * b - c)
-        let result = a.wrapping_mul(b).wrapping_sub(c);
-        
-        // Convertir le résultat en Word et l'écrire dans le registre destination
-        let result_word = Word::from_i32(result);
-        self.registers.write(rd, result_word);
-        
-        // Mettre à jour les flags si nécessaire
-        self.update_flags_from_result(&result_word);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.alu_ops += 2; // Une multiplication et une soustraction
-        
+        // Écrire le résultat dans le registre destination
+        self.write_gpr(rd, result);
         Ok(())
     }
     
     /// Exécute une instruction pour les états spéciaux
-    fn execute_special_state(&mut self, op: SpecialStateOp, rs1: usize, rd: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rd >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_special_state(&mut self, op: SpecialStateOp, rs1: Register, rd: Register) -> Result<(), ExecuteError> {
+        // Lire la valeur du registre
+        let a = self.read_gpr(rs1);
         
-        // Lire la valeur du registre source
-        let a = self.registers.read(rs1);
+        // Exécuter l'opération sur les états spéciaux
+        let result = ext_execute_special_state_op(op, a, &mut Register::R0);
         
-        // Exécuter l'opération pour les états spéciaux
-        let result = execute_special_state_op(op, a, &mut self.registers);
-        
-        // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.alu_ops += 1;
-        
+        // Écrire le résultat
+        self.write_gpr(rd, result);
         Ok(())
     }
     
     /// Exécute une instruction de sélection ternaire
-    fn execute_tsel(&mut self, rd: usize, rs1: usize, rs2: usize, rs3: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rd >= 8 || rs1 >= 8 || rs2 >= 8 || rs3 >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    fn execute_tsel(&mut self, rd: Register, rs1: Register, rs2: Register, rs3: Register) -> Result<(), ExecuteError> {
+        // Lire les valeurs des registres
+        let a = self.read_gpr(rs1); // Sélecteur
+        let b = self.read_gpr(rs2); // Valeur si négatif
+        let c = self.read_gpr(rs3); // Valeur si positif
         
-        // Lire les valeurs des registres sources
-        let a = self.registers.read(rs1);
-        let b = self.registers.read(rs2);
-        let c = self.registers.read(rs3);
-        
-        // Exécuter l'opération de sélection ternaire
-        let result = execute_tsel(a, b, c);
+        // Sélectionner en fonction de la valeur de a
+        let result = ext_execute_tsel(a, b, c);
         
         // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Mettre à jour les flags si nécessaire
-        self.update_flags_from_result(&result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.alu_ops += 1;
-        self.metrics.branches_total += 1; // Considéré comme un branchement implicite
-        
+        self.write_gpr(rd, result);
         Ok(())
     }
     
-    /// Exécute une instruction arithmétique en base 24
-    fn execute_base24(&mut self, op: Base24Op, rs1: usize, rs2: usize, rd: usize) -> Result<(), ExecuteError> {
-        // Vérifier la validité des registres
-        if rs1 >= 8 || rs2 >= 8 || rd >= 8 {
-            return Err(ExecuteError::InvalidRegister);
-        }
+    /// Exécute une instruction de base 24
+    fn execute_base24(&mut self, op: Base24Op, rs1: Register, rs2: Register, rd: Register) -> Result<(), ExecuteError> {
+        // Lire les valeurs des registres
+        let a = self.read_gpr(rs1);
+        let b = self.read_gpr(rs2);
         
-        // Lire les valeurs des registres sources
-        let a = self.registers.read(rs1);
-        let b = self.registers.read(rs2);
-        
-        // Exécuter l'opération arithmétique en base 24
-        let result = execute_base24_op(op, a, b);
+        // Exécuter l'opération en base 24
+        let result = ext_execute_base24_op(op, a, b);
         
         // Écrire le résultat dans le registre destination
-        self.registers.write(rd, result);
-        
-        // Mettre à jour les flags si nécessaire
-        self.update_flags_from_result(&result);
-        
-        // Incrémenter les compteurs de métriques
-        self.metrics.alu_ops += 1;
-        
+        self.write_gpr(rd, result);
         Ok(())
     }
 }
 
-/// Méthode auxiliaire pour mettre à jour les flags en fonction du résultat
-impl<M: Memory> crate::cpu::CPU<M> {
-    fn update_flags_from_result(&mut self, result: &Word) -> () {
-        // Vérifier si le résultat est zéro
-        let is_zero = result.is_zero();
-        
-        // Vérifier le signe du résultat (premier trit)
-        let is_negative = result.get_trit(23).value() < 0;
-        
-        // Vérifier si le résultat contient un état spécial
-        let has_special = (0..8).any(|i| {
-            let tryte = result.get_tryte(i);
-            tryte.is_special() // Méthode à implémenter dans la structure Tryte
-        });
-        
-        // Mettre à jour les flags
-        self.registers.set_flag_z(is_zero);
-        self.registers.set_flag_s(is_negative);
-        self.registers.set_flag_x(has_special);
+/// Implémentation des méthodes spécifiques pour le CPU
+impl crate::cpu::execute::Cpu {
+    /// Exécute une instruction de manipulation de vecteur ternaire
+    pub fn execute_tvpu_instruction(&mut self, _opcode: u8, _rs1: Register, _rs2: Register, _rd: Register) -> Result<(), ExecuteError> {
+        // Implémentation à venir
+        Ok(())
+    }
+    
+    /// Met à jour les flags en fonction du résultat d'une opération
+    fn update_flags_from_result(&mut self, _result: Word) {
+        // Implémentation à venir
     }
 }
 
@@ -491,30 +342,38 @@ mod tests {
     use crate::memory::SimpleMemory;
     use crate::cpu::CPU;
     
+    // Fonction utilitaire pour convertir un Word en i32
+    fn word_to_i32(word: Word) -> i32 {
+        word.trytes().iter().enumerate().fold(0, |acc, (i, tryte)| {
+            let val = tryte.bal3_value() as i32;
+            acc + val * 27i32.pow(i as u32)
+        })
+    }
+    
     #[test]
     fn test_ternary_instruction() {
         let mut memory = SimpleMemory::new(1024);
         let mut cpu = CPU::new(memory);
         
         // Initialiser les registres
-        let a = Word::from_i32(5);
-        let b = Word::from_i32(3);
+        let a = Word::from_int(5);
+        let b = Word::from_int(3);
         cpu.registers.write(1, a);
         cpu.registers.write(2, b);
         
         // Exécuter l'instruction TMIN
-        cpu.execute_ternary_instruction(TernaryOp::TMIN, 1, 2, 3).unwrap();
+        cpu.execute_ternary(TernaryOp::TMIN, 1, 2, 3).unwrap();
         
         // Vérifier le résultat
         let result = cpu.registers.read(3);
-        assert_eq!(result.to_i32(), 3); // min(5, 3) = 3
+        assert_eq!(word_to_i32(result), 3); // min(5, 3) = 3
         
         // Exécuter l'instruction TMAX
-        cpu.execute_ternary_instruction(TernaryOp::TMAX, 1, 2, 3).unwrap();
+        cpu.execute_ternary(TernaryOp::TMAX, 1, 2, 3).unwrap();
         
         // Vérifier le résultat
         let result = cpu.registers.read(3);
-        assert_eq!(result.to_i32(), 5); // max(5, 3) = 5
+        assert_eq!(word_to_i32(result), 5); // max(5, 3) = 5
     }
     
     #[test]
@@ -526,24 +385,27 @@ mod tests {
         cpu.registers.write_pc(100);
         
         // Cas 1: Valeur négative
-        let neg_value = Word::from_i32(-1);
+        let neg_value = Word::from_int(-1);
         cpu.registers.write(1, neg_value);
         cpu.execute_branch3(1, 10, 20, 30).unwrap();
-        assert_eq!(cpu.registers.read_pc(), 100 + 10 * 4);
+        let pc_val = word_to_i32(cpu.registers.read_pc());
+        assert_eq!(pc_val, 100 + 10 * 4);
         
         // Cas 2: Valeur zéro
-        let zero_value = Word::from_i32(0);
+        let zero_value = Word::from_int(0);
         cpu.registers.write(1, zero_value);
         cpu.registers.write_pc(100); // Réinitialiser le PC
         cpu.execute_branch3(1, 10, 20, 30).unwrap();
-        assert_eq!(cpu.registers.read_pc(), 100 + 20 * 4);
+        let pc_val = word_to_i32(cpu.registers.read_pc());
+        assert_eq!(pc_val, 100 + 20 * 4);
         
         // Cas 3: Valeur positive
-        let pos_value = Word::from_i32(1);
+        let pos_value = Word::from_int(1);
         cpu.registers.write(1, pos_value);
         cpu.registers.write_pc(100); // Réinitialiser le PC
         cpu.execute_branch3(1, 10, 20, 30).unwrap();
-        assert_eq!(cpu.registers.read_pc(), 100 + 30 * 4);
+        let pc_val = word_to_i32(cpu.registers.read_pc());
+        assert_eq!(pc_val, 100 + 30 * 4);
     }
     
     // Autres tests pour les instructions ternaires spécialisées...

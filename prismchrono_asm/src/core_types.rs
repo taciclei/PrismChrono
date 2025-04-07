@@ -88,6 +88,13 @@ impl Tryte {
             _ => None, // Valeur Bal3 invalide
         }
     }
+    
+    // Créer un Tryte à partir d'un entier
+    pub fn from_int(val: i32) -> Self {
+        // Limiter la valeur à la plage valide d'un tryte (-13 à +13)
+        let clamped_val = val.max(-13).min(13) as i8;
+        Self::from_bal3(clamped_val).unwrap_or(Tryte::Digit(13)) // 13 = 0 en ternaire équilibré
+    }
 
     // Convertir en 3 trits
     pub fn to_trits(&self) -> [Trit; 3] {
@@ -138,6 +145,32 @@ impl Word {
     // Crée un mot zéro
     pub fn zero() -> Self {
         Word([Tryte::Digit(13); 8]) // Tryte 13 a Bal3 = 0, donc (Z,Z,Z)
+    }
+    
+    // Crée un mot à partir d'un entier
+    pub fn from_int(val: i32) -> Self {
+        let mut word = Word::zero();
+        let mut remaining = val;
+
+        // Convertir l'entier en trytes (base 27)
+        for i in 0..8 {
+            if remaining == 0 {
+                break;
+            }
+
+            // Calculer la valeur du tryte courant
+            let tryte_val = (remaining % 27) as i8 - 13; // Convertir en ternaire équilibré (-13 à +13)
+
+            // Mettre à jour le tryte dans le mot
+            if let Some(tryte) = word.tryte_mut(i) {
+                *tryte = Tryte::from_bal3(tryte_val).unwrap_or(Tryte::Digit(13)); // 13 = 0 en ternaire équilibré
+            }
+
+            // Passer au tryte suivant
+            remaining /= 27;
+        }
+
+        word
     }
     
     // Accès aux trytes individuels

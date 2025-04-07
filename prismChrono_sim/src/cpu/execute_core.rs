@@ -4,7 +4,7 @@
 use crate::alu::add_24_trits;
 use crate::core::{Address, Trit, Tryte, Word, is_valid_address};
 use crate::cpu::isa::Instruction;
-use crate::cpu::registers::{Flags, ProcessorState, Register, RegisterError};
+use crate::cpu::registers::{Flags, ProcessorState, Register, RegisterError, PrivilegeLevel, TrapCause};
 use crate::memory::{Memory, MemoryError};
 
 // Importer les traits des modules d'exécution spécialisés
@@ -12,6 +12,7 @@ use crate::cpu::execute_alu::AluOperations;
 use crate::cpu::execute_branch::BranchOperations;
 use crate::cpu::execute_mem::MemoryOperations;
 use crate::cpu::execute_system::SystemOperations;
+use crate::cpu::execute_system::CsrOperations;
 use crate::cpu::state::CpuState;
 
 /// Erreurs possibles lors de l'exécution d'une instruction
@@ -26,6 +27,8 @@ pub enum ExecuteError {
     UnalignedAddress,             // Adresse non alignée
     InvalidOperation,             // Opération invalide
     Halted,                       // Processeur arrêté (HALT)
+    Breakpoint,                   // Point d'arrêt
+    IllegalCsrAccess,             // Accès illégal à un CSR
 }
 
 // Conversion des erreurs mémoire en erreurs d'exécution
@@ -187,22 +190,44 @@ impl Cpu {
     /// Exécute une instruction décodée
     pub fn execute(&mut self, instruction: Instruction) -> Result<(), ExecuteError> {
         match instruction {
-            Instruction::AluReg { op, rs1, rs2, rd } => self.execute_alu_reg(op, rs1, rs2, rd),
-            Instruction::AluImm { op, rs1, rd, imm } => self.execute_alu_imm(op, rs1, rd, imm),
-            Instruction::Load { rd, rs1, offset } => self.execute_load(rd, rs1, offset),
-            Instruction::Store { rs1, rs2, offset } => self.execute_store(rs1, rs2, offset),
-            Instruction::Branch { rs1, cond, offset } => self.execute_branch(rs1, cond, offset),
+            Instruction::Nop => Ok(()),
+            Instruction::Halt => Err(ExecuteError::Halted),
+            Instruction::EBreak => Err(ExecuteError::Breakpoint),
+            
+            // Format R: Registre-Registre
+            Instruction::AluReg { op, rs1, rs2, rd } => 
+                self.execute_alu_reg(op, rs1, rs2, rd),
+            
+            // Format I: Immédiat
+            Instruction::AluImm { op, rs1, rd, imm } => 
+                self.execute_alu_imm(op, rs1, rd, imm),
+            
+            // Format L/S: Load/Store
+            Instruction::Load { rd, rs1, offset } => 
+                self.execute_load(rd, rs1, offset.try_into().unwrap()),
+            
+            Instruction::Store { rs1, rs2, offset } => 
+                self.execute_store(rs1, rs2, offset.try_into().unwrap()),
+            
+            // Format B: Branch
+            Instruction::Branch { rs1, cond, offset } => 
+                self.execute_branch(rs1, cond, offset.try_into().unwrap()),
+            
             Instruction::Jump { rd, offset } => self.execute_jump(rd, offset),
             Instruction::Call { rd, offset } => self.execute_call(rd, offset),
+            Instruction::CsrRw { csr, rs1, rd } => self.execute_csrrw(rd, csr as i8, rs1),
+            Instruction::CsrRs { csr, rs1, rd } => self.execute_csrrs(rd, csr as i8, rs1),
+            Instruction::CsrRc { csr, rs1, rd } => self.execute_csrrc(rd, csr as i8, rs1),
             Instruction::System { func } => self.execute_system(func),
             Instruction::Lui { rd, imm } => self.execute_lui(rd, imm),
             Instruction::Auipc { rd, imm } => self.execute_auipc(rd, imm),
-            Instruction::Jalr { rd, rs1, offset } => self.execute_jalr(rd, rs1, offset),
-            Instruction::Nop => Ok(()), // Ne rien faire
-            Instruction::Halt => {
-                self.halted = true;
-                Ok(())
-            }
+            Instruction::Jalr { rd, rs1, offset } => self.execute_jalr(rd, rs1, offset as i8),
+            
+            // Format CSR
+            Instruction::Csr { csr, rs1, offset } => self.execute_csr_imm(csr as u8, rs1, offset),
+            
+            // Instructions spéciales
+            Instruction::MRet => self.execute_mret(),
         }
     }
 }
@@ -271,6 +296,55 @@ impl CpuState for Cpu {
 
     fn state_set_csr(&mut self, csr: i8, value: Word) -> Result<(), RegisterError> {
         self.state.set_csr(csr, value)
+    }
+
+    fn state_clear_csr(&mut self, csr: i8, value: Word) -> Result<(), RegisterError> {
+        // Lire la valeur actuelle du CSR
+        let current = self.state_read_csr(csr)?;
+        
+        // Créer une nouvelle valeur en effectuant un AND avec la négation de value
+        let mut result = Word::zero();
+        
+        // Pour chaque tryte, effectuer l'opération de clear (AND avec NOT value)
+        for i in 0..8 {
+            if let (Some(curr_tryte), Some(val_tryte)) = (current.tryte(i), value.tryte(i)) {
+                // Calculer la négation du tryte de value
+                let not_val = match val_tryte {
+                    Tryte::Digit(v) => {
+                        if *v == 0 {
+                            Tryte::Digit(0)
+                        } else {
+                            // Calculer la négation (attention, v est un u8, pas un i8)
+                            let neg_v = 23 - *v; // Négation dans l'intervalle [0, 23]
+                            Tryte::Digit(neg_v)
+                        }
+                    },
+                    _ => Tryte::Digit(0),
+                };
+                
+                // Effectuer l'opération AND entre le tryte actuel et la négation
+                let result_tryte = match (curr_tryte, &not_val) {
+                    (Tryte::Digit(a), Tryte::Digit(b)) => {
+                        if *b == 0 {
+                            // Si b est zéro, mettre à zéro
+                            Tryte::Digit(0)
+                        } else {
+                            // Sinon, garder a
+                            Tryte::Digit(*a)
+                        }
+                    },
+                    _ => Tryte::Digit(0),
+                };
+                
+                // Mettre à jour le tryte dans le résultat
+                if let Some(res_tryte) = result.tryte_mut(i) {
+                    *res_tryte = result_tryte;
+                }
+            }
+        }
+        
+        // Écrire la nouvelle valeur dans le CSR
+        self.state_write_csr(csr, result)
     }
 
     fn state_get_privilege(&self) -> PrivilegeLevel {

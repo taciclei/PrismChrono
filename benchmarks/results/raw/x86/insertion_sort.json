@@ -1,9 +1,9 @@
 {
   "benchmark": "insertion_sort",
-  "instruction_count": 1052,
-  "code_size": 424,
-  "memory_reads": 273,
-  "memory_writes": 191,
-  "branches": 69,
-  "branches_taken": 29
+  "code_size": 0,
+  "instruction_count": 0,
+  "memory_reads": 0,
+  "memory_writes": 0,
+  "branches": 0,
+  "branches_taken": 0
 }

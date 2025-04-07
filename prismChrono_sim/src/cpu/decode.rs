@@ -1,7 +1,7 @@
 // src/cpu/decode.rs
 use crate::core::Trit;
-use crate::cpu::isa::{AluOp, Instruction, Opcode};
-use crate::cpu::isa::{trits_to_aluop, trits_to_condition, trits_to_opcode, trits_to_register};
+use crate::cpu::isa::{Instruction, AluOp, Opcode};
+use crate::cpu::isa::{trits_to_aluop, trits_to_branch_condition, trits_to_opcode, trits_to_register};
 use crate::cpu::isa::{trits_to_imm3, trits_to_imm4, trits_to_imm5, trits_to_imm7};
 
 /// Erreurs possibles lors du décodage d'une instruction
@@ -11,7 +11,7 @@ pub enum DecodeError {
     InvalidFormat,      // Format d'instruction invalide
     InvalidRegister,    // Registre invalide
     InvalidAluOp,       // Opération ALU invalide
-    InvalidCondition,   // Condition de branchement invalide
+    InvalidBranchCondition,   // Condition de branchement invalide
     InvalidInstruction, // Instruction invalide (autre raison)
 }
 
@@ -47,12 +47,13 @@ pub fn decode(instr_trits: impl AsRef<[Trit]>) -> Result<Instruction, DecodeErro
         Opcode::Lui => decode_lui(&instr_trits),
         Opcode::Auipc => decode_auipc(&instr_trits),
         Opcode::Jalr => decode_jalr(&instr_trits),
+        Opcode::Csr => decode_csr(&instr_trits),
         }
     } else {
         // Format invalide
         return Err(DecodeError::InvalidFormat);
     }
-}
+
 }
 
 /// Décode une instruction ALU format R (registre-registre)
@@ -170,7 +171,7 @@ fn decode_branch(instr_trits: &[Trit]) -> Result<Instruction, DecodeError> {
     ];
 
     // Convertir en valeurs
-    let cond = trits_to_condition(cond_trits).ok_or(DecodeError::InvalidCondition)?;
+    let cond = trits_to_branch_condition(cond_trits).ok_or(DecodeError::InvalidBranchCondition)?;
     let rs1 = trits_to_register(rs1_trits).ok_or(DecodeError::InvalidRegister)?;
     let offset = trits_to_imm4(offset_trits);
 
@@ -294,14 +295,36 @@ fn decode_jalr(instr_trits: &[Trit]) -> Result<Instruction, DecodeError> {
     let rs1 = trits_to_register(rs1_trits).ok_or(DecodeError::InvalidRegister)?;
     let offset = trits_to_imm3(offset_trits);
 
-    Ok(Instruction::Jalr { rd, rs1, offset })
+    Ok(Instruction::Jalr { rd, rs1, offset: offset.into() })
+}
+
+/// Décode une instruction CSR format I
+/// [opcode(3t) | csr(3t) | rs1(2t) | offset(4t)]
+fn decode_csr(instr_trits: &[Trit]) -> Result<Instruction, DecodeError> {
+    // Extraire les champs
+    let csr_trits = [instr_trits[3], instr_trits[4], instr_trits[5]];
+    let rs1_trits = [instr_trits[6], instr_trits[7]];
+    let offset_trits = [
+        instr_trits[8],
+        instr_trits[9],
+        instr_trits[10],
+        instr_trits[11],
+    ];
+
+    // Convertir en valeurs
+    let csr = trits_to_imm3(csr_trits);
+    let rs1 = trits_to_register(rs1_trits).ok_or(DecodeError::InvalidRegister)?;
+    let offset = trits_to_imm4(offset_trits);
+
+    Ok(Instruction::Csr { csr, rs1, offset: offset.try_into().unwrap() })
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::core::Trit;
-    use crate::cpu::{Condition, Register};
+    use crate::cpu::registers::Register;
+    use crate::cpu::BranchCondition;
 
     #[test]
     fn test_decode_alu_reg() {
@@ -409,7 +432,7 @@ mod tests {
 
         if let Ok(Instruction::Branch { rs1, cond, offset }) = result {
             assert_eq!(rs1, Register::R3);
-            assert_eq!(cond, Condition::Eq);
+            assert_eq!(cond, BranchCondition::Eq);
             assert_eq!(offset, 4);
         } else {
             panic!("Expected Branch instruction");

@@ -56,6 +56,9 @@ pub trait CpuState {
     /// Effectue un OR bit à bit entre la valeur actuelle d'un CSR et une nouvelle valeur
     fn state_set_csr(&mut self, csr: i8, value: Word) -> Result<(), RegisterError>;
 
+    /// Effectue un AND bit à bit entre la valeur actuelle d'un CSR et la négation d'une nouvelle valeur
+    fn state_clear_csr(&mut self, csr: i8, value: Word) -> Result<(), RegisterError>;
+
     /// Obtient le niveau de privilège actuel depuis l'état du processeur
     fn state_get_privilege(&self) -> PrivilegeLevel;
 

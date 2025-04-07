@@ -85,8 +85,9 @@ impl Lexer {
 
     /// Tokenise une ligne du code source
     fn tokenize_line(&mut self) -> Result<(), AssemblerError> {
-        let line = &self.lines[self.current_line];
-        let mut chars = line.chars().peekable();
+        // Cloner la ligne pour éviter les problèmes d'emprunt
+        let line_content = self.lines[self.current_line].clone();
+        let mut chars = line_content.chars().peekable();
 
         while let Some(&c) = chars.peek() {
             match c {
@@ -105,7 +106,7 @@ impl Lexer {
                         line: self.current_line,
                         column: self.current_column,
                     });
-                    self.current_column = line.len();
+                    self.current_column = line_content.len();
                     break;
                 }
 
@@ -184,8 +185,40 @@ impl Lexer {
                         // Vérifier si c'est un mnémonique ou une référence à un label
                         let upper_id = identifier.to_uppercase();
                         match upper_id.as_str() {
+                            // Instructions de base
                             "NOP" | "HALT" | "ADDI" | "LUI" | "JAL" | "STOREW" | "STORET" | "BRANCH" | "ADD" | "SUB" | 
-                            "ECALL" | "EBREAK" | "MRET_T" | "CSRRW_T" | "CSRRS_T" => {
+                            "ECALL" | "EBREAK" | "MRET_T" | "CSRRW_T" | "CSRRS_T" |
+                            
+                            // Instructions de manipulation de trits
+                            "TMIN" | "TMAX" | "TSUM" | "TCMP3" | "TROTL" | "TROTR" | "TSHIFTL" | "TSHIFTR" |
+                            
+                            // Instructions de branchement ternaire
+                            "BRANCH3" | "BRANCH3_HINT" |
+                            
+                            // Instructions d'accès mémoire optimisées
+                            "LOADT3" | "STORET3" | "LOADTM" | "STORETM" | "TMEMCPY" | "TMEMSET" |
+                            
+                            // Instructions compactes
+                            "CMOV" | "CADD" | "CSUB" | "CBRANCH" |
+                            
+                            // Instructions multi-opérations
+                            "MADDW" | "MSUBW" |
+                            
+                            // Instructions pour états spéciaux
+                            "ISNULL" | "ISNAN" | "ISUNDEF" | "SETNULL" | "SETNAN" | "SETUNDEF" | "TSEL" |
+                            
+                            // Instructions arithmétiques base 24/60
+                            "ADDB24" | "SUBB24" | "MULB24" | "DIVB24" | "CVTB24" | "CVTFRB24" |
+                            "ADDB60" | "SUBB60" | "MULB60" | "DIVB60" | "CVTB60" | "CVTFRB60" |
+                            
+                            // Instructions vectorielles ternaires (TVPU)
+                            "TVADD" | "TVSUB" | "TVMUL" | "TVDOT" | "TVMAC" | "TVSUM" | "TVMIN" | "TVMAX" | "TVAVG" |
+                            
+                            // Instructions cryptographiques ternaires
+                            "TSHA3" | "TAES" | "TRNG" | "THE_ADD" | "THE_MUL" |
+                            
+                            // Instructions de compression
+                            "TCOMPRESS" | "TDECOMPRESS" => {
                                 self.tokens.push(Token {
                                     token_type: TokenType::Mnemonic(upper_id),
                                     line: self.current_line,
@@ -218,7 +251,7 @@ impl Lexer {
         self.tokens.push(Token {
             token_type: TokenType::EOL,
             line: self.current_line,
-            column: line.len(),
+            column: line_content.len(),
         });
 
         Ok(())
@@ -373,5 +406,43 @@ mod tests {
         assert_eq!(tokens[1].token_type, TokenType::Comment("No operation".to_string()));
         assert_eq!(tokens[2].token_type, TokenType::EOL);
         assert_eq!(tokens[3].token_type, TokenType::EOF);
+    }
+    
+    #[test]
+    fn test_tokenize_ternary_instructions() {
+        // Test des instructions ternaires
+        let source = "TMIN R1, R2, R3\nTVADD V1, V2, V3\nBRANCH3 R1, 10, 20, 30";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+        
+        // Vérifier TMIN R1, R2, R3
+        assert_eq!(tokens[0].token_type, TokenType::Mnemonic("TMIN".to_string()));
+        assert_eq!(tokens[1].token_type, TokenType::Register(1));
+        assert_eq!(tokens[2].token_type, TokenType::Comma);
+        assert_eq!(tokens[3].token_type, TokenType::Register(2));
+        assert_eq!(tokens[4].token_type, TokenType::Comma);
+        assert_eq!(tokens[5].token_type, TokenType::Register(3));
+        assert_eq!(tokens[6].token_type, TokenType::EOL);
+        
+        // Vérifier TVADD V1, V2, V3 (les registres vectoriels sont traités comme des labels pour l'instant)
+        assert_eq!(tokens[7].token_type, TokenType::Mnemonic("TVADD".to_string()));
+        assert_eq!(tokens[8].token_type, TokenType::LabelRef("V1".to_string()));
+        assert_eq!(tokens[9].token_type, TokenType::Comma);
+        assert_eq!(tokens[10].token_type, TokenType::LabelRef("V2".to_string()));
+        assert_eq!(tokens[11].token_type, TokenType::Comma);
+        assert_eq!(tokens[12].token_type, TokenType::LabelRef("V3".to_string()));
+        assert_eq!(tokens[13].token_type, TokenType::EOL);
+        
+        // Vérifier BRANCH3 R1, 10, 20, 30
+        assert_eq!(tokens[14].token_type, TokenType::Mnemonic("BRANCH3".to_string()));
+        assert_eq!(tokens[15].token_type, TokenType::Register(1));
+        assert_eq!(tokens[16].token_type, TokenType::Comma);
+        assert_eq!(tokens[17].token_type, TokenType::Number(10));
+        assert_eq!(tokens[18].token_type, TokenType::Comma);
+        assert_eq!(tokens[19].token_type, TokenType::Number(20));
+        assert_eq!(tokens[20].token_type, TokenType::Comma);
+        assert_eq!(tokens[21].token_type, TokenType::Number(30));
+        assert_eq!(tokens[22].token_type, TokenType::EOL);
+        assert_eq!(tokens[23].token_type, TokenType::EOF);
     }
 }

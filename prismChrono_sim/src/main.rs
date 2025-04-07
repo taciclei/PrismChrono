@@ -7,11 +7,10 @@ mod cpu;
 mod memory;
 
 // Importe les types et fonctions nécessaires depuis nos modules
-use crate::alu::{ternary_full_adder, trit_inv_word, trit_max_word, trit_min_word};
 use crate::core::{Address, Trit, Tryte, Word, is_valid_address};
-use crate::cpu::registers::RegisterError; // Importe RegisterError depuis le module registers
+ // Importe RegisterError depuis le module registers
 use crate::cpu::{Flags, ProcessorState, Register}; // Importe les types du CPU
-use crate::memory::{Memory, MemoryError}; // Importe Memory et son type d'erreur // Importe les fonctions de l'ALU
+use crate::memory::Memory; // Importe Memory et son type d'erreur // Importe les fonctions de l'ALU
 
 fn main() {
     // Affiche un message de démarrage sympa avec le nom de l'architecture

@@ -13,32 +13,39 @@ PrismChrono Simulator est un simulateur pour l'architecture ternaire PrismChrono
 - **Registres**: 8 registres généraux (R0-R7)
 - **Système de privilèges**: 3 niveaux (Machine, Supervisor, User)
 - **Format d'instructions**: Standard (12 Trits) et Compact (8 Trits)
+- **Pipeline**: 5 étages avec prédiction de branchement
 
 ## Structure du Projet
 
 ```
 prismChrono_sim/
 ├── src/
-│   ├── alu.rs           # Implémentation de l'ALU (Arithmetic Logic Unit)
+│   ├── alu.rs                # Implémentation de l'ALU (Arithmetic Logic Unit)
+│   ├── branch_predictor.rs   # Prédicteur de branchement
+│   ├── cache.rs              # Implémentation du cache
 │   ├── core/
-│   │   ├── mod.rs       # Module principal pour les types de base
-│   │   └── types.rs     # Définition des types ternaires (Trit, Tryte, Word)
+│   │   ├── mod.rs            # Module principal pour les types de base
+│   │   └── types.rs          # Définition des types ternaires (Trit, Tryte, Word)
 │   ├── cpu/
-│   │   ├── decode.rs    # Décodage des instructions
-│   │   ├── execute.rs   # Point d'entrée pour l'exécution des instructions
-│   │   ├── execute_alu.rs     # Exécution des instructions ALU
-│   │   ├── execute_branch.rs  # Exécution des instructions de branchement
-│   │   ├── execute_mem.rs     # Exécution des instructions mémoire
-│   │   ├── execute_system.rs  # Exécution des instructions système
-│   │   ├── execute_ternary.rs # Exécution des instructions ternaires spécialisées
-│   │   ├── compact_format.rs  # Implémentation du format d'instruction compact
-│   │   ├── isa.rs       # Définition de l'ISA (Instruction Set Architecture)
-│   │   ├── mod.rs       # Module principal pour le CPU
-│   │   └── registers.rs # Gestion des registres
-│   ├── memory.rs        # Implémentation de la mémoire
-│   ├── lib.rs           # Bibliothèque pour l'exportation des fonctionnalités
-│   └── main.rs          # Point d'entrée du simulateur
-└── bin/                 # Programmes de test
+│   │   ├── decode.rs                # Décodage des instructions
+│   │   ├── execute_core.rs          # Cœur d'exécution des instructions
+│   │   ├── execute_alu.rs           # Exécution des instructions ALU
+│   │   ├── execute_branch.rs        # Exécution des instructions de branchement
+│   │   ├── execute_load_store.rs    # Exécution des instructions mémoire
+│   │   ├── execute_system.rs        # Exécution des instructions système
+│   │   ├── execute_ternary.rs       # Exécution des instructions ternaires spécialisées
+│   │   ├── isa.rs                   # Définition de l'ISA (Instruction Set Architecture)
+│   │   ├── isa_extensions.rs        # Extensions de l'ISA
+│   │   ├── mod.rs                   # Module principal pour le CPU
+│   │   ├── registers.rs             # Gestion des registres
+│   │   ├── state.rs                 # Gestion de l'état du CPU
+│   │   └── supervisor_privilege.rs  # Gestion des privilèges superviseur
+│   ├── memory.rs             # Implémentation de la mémoire
+│   ├── neural.rs             # Fonctionnalités pour le calcul neuronal ternaire
+│   ├── pipeline.rs           # Implémentation du pipeline
+│   ├── lib.rs                # Bibliothèque pour l'exportation des fonctionnalités
+│   └── main.rs               # Point d'entrée du simulateur
+└── bin/                      # Programmes de test
 ```
 
 ## Types de Données Ternaires
@@ -64,6 +71,13 @@ Un Tryte est composé de 3 Trits et peut représenter :
 
 Un Word est composé de 8 Trytes (24 Trits) et représente la taille standard des données manipulées par le processeur.
 
+## Avantages de l'Architecture Ternaire
+
+- **Densité d'information** : 3^24 (≈ 282 trillion) états possibles par mot vs 2^32 (≈ 4 milliard) en binaire 32-bit
+- **Efficacité énergétique** : Meilleure utilisation théorique du rapport signal/bruit
+- **Logique naturelle** : Représentation directe des concepts vrai/faux/inconnu ou positif/zéro/négatif
+- **Arithmétique équilibrée** : Représentation symétrique des nombres positifs et négatifs
+
 ## Formats d'Instructions
 
 Les instructions PrismChrono utilisent deux formats principaux :
@@ -88,6 +102,9 @@ Les instructions PrismChrono utilisent deux formats principaux :
 - **Format J** : `[opcode(3t) | rd(2t) | offset(7t)]`
   - Utilisé pour les opérations de saut
 
+- **Format C** : `[opcode(3t) | rd(2t) | rs1(2t) | csr(5t)]`
+  - Utilisé pour les opérations sur les registres de contrôle et de statut (CSR)
+
 ### Format Compact (8 Trits)
 
 - **Format C** : `[op(2t) | rd/cond(2t) | rs/offset(4t)]`
@@ -111,9 +128,9 @@ Opérations registre-registre avec les opérations suivantes :
 - **MUL** : Multiplication (rd = rs1 * rs2)
 - **DIV** : Division (rd = rs1 / rs2)
 - **MOD** : Modulo (rd = rs1 % rs2)
-- **TRITINV** : Inverseur logique trit-à-trit (rd = ~rs1)
-- **TRITMIN** : Minimum logique trit-à-trit (rd = min(rs1, rs2))
-- **TRITMAX** : Maximum logique trit-à-trit (rd = max(rs1, rs2))
+- **AND** : ET logique (rd = rs1 & rs2)
+- **OR** : OU logique (rd = rs1 | rs2)
+- **XOR** : OU exclusif (rd = rs1 ^ rs2)
 - **SHL** : Décalage à gauche (rd = rs1 << rs2)
 - **SHR** : Décalage à droite (rd = rs1 >> rs2)
 - **CMP** : Comparaison (met à jour les flags)
@@ -140,6 +157,8 @@ Branchement conditionnel basé sur les flags :
 - **BGE** : Branche si supérieur ou égal (SF = 0)
 - **BLTU** : Branche si inférieur non signé
 - **BGEU** : Branche si supérieur ou égal non signé
+- **BOF** : Branche si débordement (OF = 1)
+- **BCF** : Branche si retenue (CF = 1)
 - **BSPEC** : Branche si état spécial (XF = 1)
 - **B** : Branche toujours
 
@@ -154,17 +173,20 @@ Branchement conditionnel basé sur les flags :
 - **LUI** : Charge l'immédiat supérieur
 - **AUIPC** : Ajoute l'immédiat supérieur au PC
 
-### Instructions Système
+### Instructions Système et CSR (Format C)
 
-- **CSRRW** : CSR Read & Write
-- **CSRRS** : CSR Read & Set
-- **MRET** : Machine Return
-- **SRET** : Supervisor Return
-- **SYSTEM** : Instructions système diverses
+- **CSRRW** : CSR Read & Write - Lit la valeur actuelle d'un CSR et écrit une nouvelle valeur
+- **CSRRS** : CSR Read & Set - Lit la valeur actuelle d'un CSR et active des bits spécifiques
+- **CSRRC** : CSR Read & Clear - Lit la valeur actuelle d'un CSR et désactive des bits spécifiques
+- **MRET** : Machine Return - Retourne d'une exception en mode Machine
+- **SRET** : Supervisor Return - Retourne d'une exception en mode Supervisor
+- **ECALL** : Environment Call - Appel système
+- **EBREAK** : Environment Break - Point d'arrêt pour débogage
 
 ### Instructions Ternaires Spécialisées
 
 #### Manipulation de Trits
+- **TRITINV Rd, Rs1** : Inverseur logique trit-à-trit (N→P, P→N, Z→Z)
 - **TMIN Rd, Rs1, Rs2** : Minimum ternaire (par trit) - Pour chaque trit i: Rd[i] = min(Rs1[i], Rs2[i])
 - **TMAX Rd, Rs1, Rs2** : Maximum ternaire (par trit) - Pour chaque trit i: Rd[i] = max(Rs1[i], Rs2[i])
 - **TSUM Rd, Rs1, Rs2** : Somme ternaire (par trit) - Pour chaque trit i: Rd[i] = Rs1[i] + Rs2[i] (sans propagation)
@@ -189,6 +211,11 @@ Branchement conditionnel basé sur les flags :
 - **MADDW/MSUBW Rd, Rs1, Rs2, Rs3** : Multiplication-addition/soustraction
 - **TSEL Rd, Rs1, Rs2, Rs3** : Sélection ternaire (équivalent à un multiplexeur à 3 entrées)
 
+#### Extensions pour Calcul Neuronal Ternaire
+- **TNNMUL Rd, Rs1, Rs2** : Multiplication matricielle ternaire pour réseaux neuronaux
+- **TNNACT Rd, Rs1** : Fonction d'activation ternaire
+- **TNNPOOL Rd, Rs1, Rs2** : Opération de pooling ternaire
+
 ### Instructions Format Compact
 
 #### Format C (8 Trits)
@@ -202,6 +229,36 @@ Branchement conditionnel basé sur les flags :
 - **Efficacité du cache** : Améliore le taux de succès du cache d'instructions
 - **Performance** : Réduit le temps de chargement des instructions
 - **Consommation** : Diminue la bande passante mémoire requise
+
+## Pipeline et Exécution
+
+PrismChrono utilise un pipeline à 5 étages :
+
+1. **IF** (Instruction Fetch) : Récupération de l'instruction depuis la mémoire
+2. **ID** (Instruction Decode) : Décodage de l'instruction et lecture des registres
+3. **EX** (Execute) : Exécution de l'instruction dans l'ALU ou autre unité fonctionnelle
+4. **MEM** (Memory Access) : Accès à la mémoire pour les chargements/stockages
+5. **WB** (Write Back) : Écriture des résultats dans les registres
+
+### Prédiction de Branchement
+
+Le simulateur implémente plusieurs stratégies de prédiction de branchement :
+
+- **Statique** : Toujours prédire pris/non pris
+- **Local** : Prédiction basée sur l'historique local du branchement
+- **Global** : Prédiction basée sur l'historique global de tous les branchements
+- **Tournament** : Combinaison des prédicteurs locaux et globaux
+- **Tri-directional** : Prédiction ternaire spécialisée pour les branchements à 3 voies
+
+### Système de Cache
+
+Le simulateur inclut un système de cache configurable :
+
+- **Cache L1** : Cache d'instructions et de données de premier niveau
+- **Cache unifié** : Cache partagé entre instructions et données
+- **Politique de remplacement** : LRU (Least Recently Used)
+- **Politique d'écriture** : Write-back et write-allocate
+- **Préchargement** : Préchargement basé sur les motifs d'accès
 
 ## Système de Privilèges
 
@@ -221,14 +278,34 @@ Le système de privilèges est géré par des CSRs (Control and Status Registers
 - **mcause_t, scause_t** : Registres de cause d'exception
 - **medeleg_t, mideleg_t** : Registres de délégation d'exception et d'interruption
 
-## Flags
+## Flags et État du Processeur
 
 Le processeur maintient plusieurs flags qui sont mis à jour par les opérations ALU :
 
 - **ZF** : Zero Flag (1 si le résultat est zéro)
 - **SF** : Sign Flag (1 si le résultat est négatif)
 - **OF** : Overflow Flag (1 si un débordement s'est produit)
-- **XF** : Special Flag (1 pour des conditions spéciales)
+- **CF** : Carry Flag (1 si une retenue s'est produite)
+- **XF** : Extended Flag (1 pour des conditions spéciales)
+
+## Extensions Matérielles
+
+### Accélération des Calculs Neuronaux Ternaires
+
+Le simulateur inclut des extensions matérielles pour accélérer les calculs neuronaux en ternaire :
+
+- Multiplication matricielle ternaire optimisée
+- Fonctions d'activation ternaires natives
+- Opérations de pooling et convolution ternaires
+- Compression de poids ternaires pour réduire l'empreinte mémoire
+
+### Compression de Données Ternaires
+
+Des algorithmes natifs de compression/décompression ternaire sont implémentés :
+
+- **Huffman Ternaire** : Compression adaptative basée sur la fréquence des symboles
+- **Run-Length Ternaire** : Compression des séquences répétitives en ternaire
+- **Delta Ternaire** : Compression par différence ternaire
 
 ## Utilisation du Simulateur
 
@@ -247,20 +324,40 @@ cargo run --bin test_cpu
 cargo run --bin test_load_store
 cargo run --bin test_ternary_ops
 cargo run --bin test_compact_format
+cargo run --bin test_csr_ops
+cargo run --bin test_neural
 ```
 
 ## Benchmarking
 
-Le simulateur inclut un système de benchmarking pour comparer les performances de l'architecture ternaire PrismChrono avec l'architecture binaire x86. Les benchmarks sont disponibles dans le répertoire `/benchmarks` et peuvent être exécutés avec les scripts fournis.
+Le simulateur inclut un système de benchmarking pour comparer les performances de l'architecture ternaire PrismChrono avec l'architecture binaire traditionnelle. Les benchmarks mesurent :
 
-Pour plus d'informations sur les benchmarks, consultez le fichier `/benchmarks/README.md`.
+- Vitesse d'exécution (instructions par seconde)
+- Utilisation de la mémoire
+- Efficacité énergétique théorique
+- Densité de code
 
 ## Développement Futur
 
 Le projet PrismChrono prévoit les développements suivants :
 
 - Amélioration du compilateur assembleur (`prismchrono_asm`)
-- Implémentation d'un système d'exploitation minimal
+- Implémentation d'un système d'exploitation minimal ternaire
 - Optimisation des performances du simulateur
 - Extension du jeu d'instructions ternaires spécialisées
 - Développement d'un compilateur C pour l'architecture PrismChrono
+- Implémentation matérielle sur FPGA
+
+## Comment Contribuer
+
+Les contributions au projet PrismChrono sont les bienvenues. Voici comment vous pouvez contribuer :
+
+1. Forker le dépôt
+2. Créer une branche pour vos modifications (`git checkout -b feature/ma-feature`)
+3. Committer vos changements (`git commit -am 'Ajout de ma feature'`)
+4. Pousser vers la branche (`git push origin feature/ma-feature`)
+5. Créer une Pull Request
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.

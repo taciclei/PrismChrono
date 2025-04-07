@@ -1,6 +1,7 @@
 // src/cpu/registers.rs
 
 use crate::core::Word;
+use crate::core::{Trit, Tryte};
 use std::fmt;
 
 /// Représente les drapeaux (flags) du processeur
@@ -9,6 +10,8 @@ pub struct Flags {
     pub zf: bool, // Zero Flag - Indique si le résultat est zéro
     pub sf: bool, // Sign Flag - Indique si le résultat est négatif
     pub xf: bool, // eXtended Flag - Utilisé pour les opérations spéciales ou les états spéciaux
+    pub of: bool, // Overflow Flag - Indique un débordement lors d'une opération
+    pub cf: bool, // Carry Flag - Indique une retenue lors d'une opération
 }
 
 impl Flags {
@@ -18,6 +21,8 @@ impl Flags {
             zf: false,
             sf: false,
             xf: false,
+            of: false,
+            cf: false,
         }
     }
 
@@ -26,6 +31,8 @@ impl Flags {
         self.zf = false;
         self.sf = false;
         self.xf = false;
+        self.of = false;
+        self.cf = false;
     }
 }
 
@@ -39,10 +46,12 @@ impl fmt::Display for Flags {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
-            "Z:{} S:{} X:{}",
+            "Z:{} S:{} X:{} O:{} C:{}",
             if self.zf { "1" } else { "0" },
             if self.sf { "1" } else { "0" },
-            if self.xf { "1" } else { "0" }
+            if self.xf { "1" } else { "0" },
+            if self.of { "1" } else { "0" },
+            if self.cf { "1" } else { "0" }
         )
     }
 }
@@ -348,8 +357,8 @@ impl ProcessorState {
                     (current_tryte, value_tryte)
                 {
                     // Convertir en valeurs Bal3
-                    let current_bal3 = (*current_val as i8) - 13;
-                    let value_bal3 = (*value_val as i8) - 13;
+                    let _current_bal3 = (*current_val as i8) - 13;
+                    let _value_bal3 = (*value_val as i8) - 13;
 
                     // Effectuer l'opération OR sur les trits individuels
                     let mut result_trits = [Trit::Z; 3];
@@ -501,17 +510,25 @@ mod tests {
         assert!(!flags.zf);
         assert!(!flags.sf);
         assert!(!flags.xf);
+        assert!(!flags.of);
+        assert!(!flags.cf);
 
         flags.zf = true;
         flags.sf = true;
+        flags.of = true;
+        flags.cf = true;
         assert!(flags.zf);
         assert!(flags.sf);
         assert!(!flags.xf);
+        assert!(flags.of);
+        assert!(flags.cf);
 
         flags.reset();
         assert!(!flags.zf);
         assert!(!flags.sf);
         assert!(!flags.xf);
+        assert!(!flags.of);
+        assert!(!flags.cf);
     }
 
     #[test]
@@ -537,7 +554,8 @@ mod tests {
         let mut flags = Flags::new();
         flags.zf = true;
         flags.sf = false;
-        flags.xf = true;
+        flags.of = true;
+        flags.cf = true;
         state.write_flags(flags.clone());
         assert_eq!(state.read_flags(), flags);
 
@@ -545,5 +563,7 @@ mod tests {
         assert!(!state.fr.zf);
         assert!(!state.fr.sf);
         assert!(!state.fr.xf);
+        assert!(!state.fr.of);
+        assert!(!state.fr.cf);
     }
 }
