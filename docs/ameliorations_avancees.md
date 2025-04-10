@@ -35,17 +35,88 @@ Ces instructions permettraient d'optimiser les algorithmes de réduction vectori
 
 ### 2.1 Prédicteur de Branchement à États Multiples
 
-Développer un prédicteur de branchement qui exploite pleinement la nature ternaire des conditions, avec un mécanisme à états multiples qui utilise l'état "peut-être" pour réduire les pénalités de mauvaise prédiction.
+Le prédicteur de branchement exploite la nature ternaire des conditions avec un mécanisme à états multiples :
 
+```rust
+// États du prédicteur ternaire
+enum PredictionState {
+    StronglyNegative,    // Fortement vers branche négative
+    WeaklyNegative,      // Faiblement vers branche négative
+    Uncertain,           // État incertain (peut-être)
+    WeaklyPositive,      // Faiblement vers branche positive
+    StronglyPositive     // Fortement vers branche positive
+}
+
+// Structure d'entrée de la table de prédiction
+struct PredictionEntry {
+    state: PredictionState,
+    target_negative: u32,  // Adresse cible si condition négative
+    target_zero: u32,      // Adresse cible si condition zéro
+    target_positive: u32,  // Adresse cible si condition positive
+    confidence: u8         // Niveau de confiance de la prédiction
+}
 ```
-BRANCH3_HINT Rs1, hint, offset_neg, offset_zero, offset_pos
+
+### 2.2 Logique de Mise à Jour
+
+```rust
+impl PredictionEntry {
+    fn update(&mut self, actual_outcome: Trit) {
+        self.state = match (self.state, actual_outcome) {
+            (StronglyNegative, Negative) => StronglyNegative,
+            (StronglyNegative, Zero) => WeaklyNegative,
+            (WeaklyNegative, Negative) => StronglyNegative,
+            (WeaklyNegative, Zero) => Uncertain,
+            (Uncertain, outcome) => match outcome {
+                Negative => WeaklyNegative,
+                Zero => Uncertain,
+                Positive => WeaklyPositive
+            },
+            // ... autres cas de transition
+        };
+        
+        self.confidence = match actual_outcome {
+            predicted if predicted == self.predict() => 
+                self.confidence.saturating_add(1),
+            _ => self.confidence.saturating_sub(1)
+        };
+    }
+}
 ```
 
-Cette instruction permettrait au compilateur de fournir des indices de prédiction basés sur l'analyse statique du code, améliorant ainsi la précision de la prédiction de branchement.
+### 2.3 Exécution Spéculative Ternaire
 
-### 2.2 Exécution Spéculative Ternaire
+Le mécanisme d'exécution spéculative exploite la logique ternaire pour gérer efficacement les branchements :
 
-Introduire un mécanisme d'exécution spéculative qui exploite la logique ternaire pour explorer simultanément plusieurs chemins d'exécution avec différents niveaux de confiance, réduisant ainsi les pénalités de mauvaise prédiction.
+```rust
+struct SpeculativeState {
+    pc: u32,
+    prediction: PredictionState,
+    checkpoint: ProcessorCheckpoint,
+    confidence: u8
+}
+
+impl Pipeline {
+    fn handle_branch(&mut self, inst: &Instruction) {
+        let prediction = self.branch_predictor.predict(inst.pc);
+        
+        if prediction.confidence > SPECULATION_THRESHOLD {
+            // Exécution spéculative du chemin prédit
+            self.speculative_execute(prediction.get_target());
+        } else {
+            // Attente de la résolution du branchement
+            self.stall_pipeline();
+        }
+    }
+    
+    fn resolve_branch(&mut self, actual_outcome: Trit) {
+        if actual_outcome != self.current_speculation.prediction {
+            self.rollback_to_checkpoint();
+            self.branch_predictor.update(actual_outcome);
+        }
+    }
+}
+```
 
 ## 3. Instructions Cryptographiques Ternaires
 

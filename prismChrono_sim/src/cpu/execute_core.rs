@@ -13,6 +13,7 @@ use crate::cpu::execute_branch::BranchOperations;
 use crate::cpu::execute_mem::MemoryOperations;
 use crate::cpu::execute_system::SystemOperations;
 use crate::cpu::execute_system::CsrOperations;
+use crate::cpu::execute_ternary::TernaryOperations;
 use crate::cpu::state::CpuState;
 
 /// Erreurs possibles lors de l'exécution d'une instruction
@@ -57,6 +58,31 @@ pub struct Cpu {
     pub memory_writes: u64,         // Nombre d'opérations d'écriture mémoire
     pub branches_total: u64,        // Nombre total d'instructions de branchement
     pub branches_taken: u64,        // Nombre de branchements effectivement pris
+    /// Affiche un rapport des métriques d'exécution
+    pub fn report_metrics(&self) {
+        println!("--- Rapport d'exécution PrismChrono ---");
+        println!("Instructions exécutées : {}", self.instructions_executed);
+        println!("Lectures mémoire       : {}", self.memory_reads);
+        println!("Écritures mémoire      : {}", self.memory_writes);
+        println!("Branchements totaux    : {}", self.branches_total);
+        println!("Branchements pris      : {}", self.branches_taken);
+        println!("---------------------------------------");
+        /// Affiche l'état des registres et des flags
+        pub fn dump_state(&self) {
+            println!("--- État CPU PrismChrono ---");
+            for i in 0..8 {
+                let reg_val = self.read_gpr(i).unwrap_or_default();
+                println!("R{}: {:?}", i, reg_val);
+            }
+            let pc = self.read_pc();
+            println!("PC: {:?}", pc);
+            let sp = self.read_sp();
+            println!("SP: {:?}", sp);
+            let flags = self.read_flags();
+            println!("Flags: ZF={} SF={} XF={} CF={} OF={}", flags.zf, flags.sf, flags.xf, flags.cf, flags.of);
+            println!("----------------------------");
+        }
+    }
 }
 
 impl Cpu {

@@ -1,0 +1,49 @@
+$date
+  Tue Apr  8 21:32:02 2025
+$end
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module textio $end
+$upscope $end
+$scope module std_logic_1164 $end
+$upscope $end
+$scope module numeric_std $end
+$upscope $end
+$scope module prismchrono_types_pkg $end
+$upscope $end
+$scope module tb_trit_inverter $end
+$var reg 2 ! input_trit[1:0] $end
+$var reg 2 " output_trit[1:0] $end
+$scope module uut $end
+$var reg 2 # trit_in[1:0] $end
+$var reg 2 $ trit_out[1:0] $end
+$upscope $end
+$upscope $end
+$enddefinitions $end
+#0
+b00 !
+b10 "
+b00 #
+b10 $
+#10000000
+b01 !
+b01 "
+b01 #
+b01 $
+#20000000
+b10 !
+b00 "
+b10 #
+b00 $
+#30000000
+b11 !
+b11 "
+b11 #
+b11 $
+#40000000

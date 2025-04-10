@@ -52,13 +52,15 @@ impl<T: CpuState> BranchOperations for T {
         // 2. Évaluer la condition
         let condition_met = match cond {
             BranchCondition::Zero => flags.zf,              // Égal (ZF = 1)
-            BranchCondition::NonZero => !flags.zf,             // Non égal (ZF = 0)
-            BranchCondition::Negative => flags.sf,              // Inférieur (SF = 1)
-            BranchCondition::Positive => !flags.sf, // Supérieur ou égal (SF = 0)
-            BranchCondition::Overflow => flags.of, // Débordement (OF = 1)
-            BranchCondition::Carry => flags.cf, // Reprise (CF = 1)
-            BranchCondition::True => true,  // Toujours vrai
-            BranchCondition::False => false, // Toujours faux
+            BranchCondition::NonZero => !flags.zf,          // Non égal (ZF = 0)
+            BranchCondition::Negative => flags.sf,          // Inférieur (SF = 1)
+            BranchCondition::Positive => !flags.sf,         // Supérieur ou égal (SF = 0)
+            BranchCondition::Overflow => flags.of,          // Débordement (OF = 1)
+            BranchCondition::Carry => flags.cf,             // Retenue (CF = 1)
+            BranchCondition::XS => flags.xf,                // État spécial (XF = 1)
+            BranchCondition::XN => !flags.xf,               // État normal (XF = 0)
+            BranchCondition::True => true,                  // Toujours vrai
+            BranchCondition::False => false,                // Toujours faux
         };
 
         // 3. Si la condition est remplie, calculer la nouvelle adresse PC

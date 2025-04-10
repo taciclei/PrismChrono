@@ -1,0 +1,57 @@
+$date
+  Tue Apr  8 21:32:02 2025
+$end
+$version
+  GHDL v0
+$end
+$timescale
+  1 fs
+$end
+$scope module standard $end
+$upscope $end
+$scope module textio $end
+$upscope $end
+$scope module std_logic_1164 $end
+$upscope $end
+$scope module numeric_std $end
+$upscope $end
+$scope module prismchrono_types_pkg $end
+$upscope $end
+$scope module tb_prismchrono_types_pkg $end
+$var reg 2 ! test_trit[1:0] $end
+$var integer 32 " test_int $end
+$var reg 2 # test_result_trit[1:0] $end
+$var integer 32 $ test_result_int $end
+$upscope $end
+$enddefinitions $end
+#0
+b00 !
+b10000000000000000000000000000000 "
+bUU #
+b10000000000000000000000000000000 $
+#10000000
+b01 !
+b11111111111111111111111111111111 $
+#20000000
+b10 !
+b0 $
+#30000000
+b11 !
+b1 $
+#40000000
+b11111111111111111111111111111111 "
+b0 $
+#50000000
+b0 "
+b00 #
+#60000000
+b1 "
+b01 #
+#70000000
+b11111111111111111111111111111011 "
+b10 #
+#80000000
+b101 "
+b00 #
+#90000000
+b10 #

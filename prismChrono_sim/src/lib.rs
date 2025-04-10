@@ -5,6 +5,7 @@ pub mod alu;
 pub mod core;
 pub mod cpu;
 pub mod memory;
+pub mod ternary_instructions; // Nouveau module pour les instructions ternaires spécialisées
 
 // Réexporte les types et fonctions importantes pour faciliter l'accès
 pub use crate::alu::{ternary_full_adder, trit_inv_word, trit_max_word, trit_min_word};
@@ -30,3 +31,8 @@ pub use crate::branch_predictor::TernaryBranchPredictor;
 pub use crate::pipeline::SuperscalarPipeline;
 pub use crate::cache::TernaryPredictiveCache;
 pub use crate::neural::TernaryMatrix;
+
+// Réexporte les instructions ternaires spécialisées
+pub use crate::ternary_instructions::{tcmp3, abs_t, signum_t, extract_tryte, insert_tryte};
+pub use crate::ternary_instructions::{checkw_valid, is_special_tryte};
+pub use crate::ternary_instructions::{decimal_to_base60, base60_to_decimal, add_base60};

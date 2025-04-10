@@ -1,0 +1,31 @@
+v 4
+file / "/workspace/sim/testbenches/tb_ternary_full_adder_1t.vhd" "3d6d6c7ca3512ddae73d21dc450cfb072eb4691e" "20250408213201.727":
+  entity tb_ternary_full_adder_1t at 1( 0) + 0 on 363;
+  architecture sim of tb_ternary_full_adder_1t at 12( 246) + 0 on 364;
+file / "/workspace/sim/testbenches/tb_register_file.vhd" "20abc60015a3d2f4f3b50f3f4b1917c5ff7f8939" "20250408213201.265":
+  entity tb_register_file at 1( 0) + 0 on 359;
+  architecture sim of tb_register_file at 13( 256) + 0 on 360;
+file / "/workspace/sim/testbenches/tb_alu_24t.vhd" "8106b1b1518db98e79ed4be08d7e623a4c8c8b7b" "20250408213201.045":
+  entity tb_alu_24t at 1( 0) + 0 on 357;
+  architecture sim of tb_alu_24t at 13( 244) + 0 on 358;
+file / "/workspace/rtl/core/register_file.vhd" "a12dbc5c827423af0bfb49f813e774147d80071f" "20250408213159.565":
+  entity register_file at 1( 0) + 0 on 353;
+  architecture rtl of register_file at 23( 942) + 0 on 354;
+file / "/workspace/rtl/core/ternary_full_adder_1t.vhd" "b765b9f6a7c3fbf1382c3b2ca526518e17abc73b" "20250408213156.977":
+  entity ternary_full_adder_1t at 1( 0) + 0 on 349;
+  architecture rtl of ternary_full_adder_1t at 18( 398) + 0 on 350;
+file / "/workspace/rtl/pkg/prismchrono_types_pkg.vhd" "96d121a8e0be3b9fb7a59c75fe8f83e30a8e1d90" "20250408213155.473":
+  package prismchrono_types_pkg at 1( 0) + 0 on 345 body;
+  package body prismchrono_types_pkg at 148( 7785) + 0 on 346;
+file / "/workspace/rtl/core/trit_inverter.vhd" "f3a8bc9e6bf04cdc4e45231e6dc3f9bb4a436648" "20250408213155.706":
+  entity trit_inverter at 1( 0) + 0 on 347;
+  architecture rtl of trit_inverter at 15( 279) + 0 on 348;
+file / "/workspace/rtl/core/alu_24t.vhd" "b6a0ea51da72e0ac0ea4e7ba96a5aa3e744fac45" "20250408213158.297":
+  entity alu_24t at 1( 0) + 0 on 351;
+  architecture rtl of alu_24t at 21( 681) + 0 on 352;
+file / "/workspace/sim/testbenches/tb_prismchrono_types_pkg.vhd" "cd0ea883e9c3565979af4ba4e796fa0ed6d1eeb9" "20250408213200.831":
+  entity tb_prismchrono_types_pkg at 1( 0) + 0 on 355;
+  architecture sim of tb_prismchrono_types_pkg at 13( 259) + 0 on 356;
+file / "/workspace/sim/testbenches/tb_trit_inverter.vhd" "9ab0cedab31b115d5e9eefc160cd48804e22f514" "20250408213201.476":
+  entity tb_trit_inverter at 1( 0) + 0 on 361;
+  architecture sim of tb_trit_inverter at 12( 230) + 0 on 362;

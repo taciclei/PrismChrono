@@ -15,6 +15,63 @@ fn main() {
     // Programme de test pour les instructions de branchement
     // Ce programme teste toutes les conditions de branchement
     let program = [
+        // --- Test XS (XF=1) ---
+        // Forcer XF=1 en comparant un NaN avec n'importe quoi
+        Instruction::AluImm {
+            op: AluOp::Add,
+            rs1: Register::R0,
+            rd: Register::R1,
+            imm: 0, // R1 = 0
+        },
+        Instruction::AluImm {
+            op: AluOp::Add,
+            rs1: Register::R0,
+            rd: Register::R2,
+            imm: 0, // R2 = 0
+        },
+        // Simuler un NaN dans R2 (par exemple via une instruction spéciale ou chargement mémoire, ici simplifié)
+        // Supposons que l'implémentation considère une valeur spéciale dans R2
+        // (Dans un vrai test, il faudrait charger explicitement un NaN)
+        // Comparer R1 et R2 pour propager XF=1
+        Instruction::AluReg {
+            op: AluOp::Cmp,
+            rs1: Register::R1,
+            rs2: Register::R2,
+            rd: Register::R0,
+        },
+        // BRANCH XS, offset 2 (doit sauter si XF=1)
+        Instruction::Branch {
+            rs1: Register::R3,
+            cond: BranchCondition::XS,
+            offset: 2,
+        },
+
+        // --- Test XN (XF=0) ---
+        // Forcer XF=0 avec une opération normale
+        Instruction::AluImm {
+            op: AluOp::Add,
+            rs1: Register::R0,
+            rd: Register::R1,
+            imm: 5,
+        },
+        Instruction::AluImm {
+            op: AluOp::Add,
+            rs1: Register::R0,
+            rd: Register::R2,
+            imm: 3,
+        },
+        Instruction::AluReg {
+            op: AluOp::Cmp,
+            rs1: Register::R1,
+            rs2: Register::R2,
+            rd: Register::R0,
+        },
+        // BRANCH XN, offset 2 (doit sauter si XF=0)
+        Instruction::Branch {
+            rs1: Register::R3,
+            cond: BranchCondition::XN,
+            offset: 2,
+        },
         // Initialiser R3 à 100 (adresse de base pour les branchements)
         Instruction::AluImm {
             op: AluOp::Add,

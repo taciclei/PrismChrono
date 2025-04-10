@@ -56,19 +56,34 @@ pub enum AluOp {
 
     // Opérations de comparaison
     Cmp, // Comparaison (met à jour les flags)
+    // Instructions spécialisées ternaires
+    Compare3,       // Comparaison ternaire directe (-1,0,1)
+    Abs,            // Valeur absolue
+    Signum,         // Extraction du signe
+    Clamp,          // Limitation de plage
+    TernaryMux,     // Multiplexeur ternaire
+    TestState,      // Test d'état global
+    IsSpecialTryte, // Test d'un tryte spécial
+    CheckW,         // Validation d'un mot
+    SelectValid,    // Sélection conditionnelle
+    ExtractTryte,   // Extraction d'un tryte
+    InsertTryte,    // Insertion d'un tryte
+    ValidateB24,    // Validation Base 24
 }
 
 /// Représente les différentes conditions de branchement
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BranchCondition {
-    Zero,     // Égal à zéro
-    NonZero,  // Différent de zéro
-    Negative, // Valeur négative
-    Positive, // Valeur positive
-    Overflow, // Dépassement (overflow)
-    Carry,    // Retenue (carry)
-    True,     // Toujours vrai
-    False,    // Toujours faux
+    Zero,       // Égal à zéro
+    NonZero,    // Différent de zéro
+    Negative,   // Valeur négative
+    Positive,   // Valeur positive
+    Overflow,   // Dépassement (overflow)
+    Carry,      // Retenue (carry)
+    XS,         // Flag spécial activé (XF=1)
+    XN,         // Flag spécial désactivé (XF=0)
+    True,       // Toujours vrai
+    False,      // Toujours faux
 }
 
 impl BranchCondition {
@@ -83,6 +98,8 @@ impl BranchCondition {
             5 => Some(BranchCondition::Carry),
             6 => Some(BranchCondition::True),
             7 => Some(BranchCondition::False),
+            8 => Some(BranchCondition::XS),
+            9 => Some(BranchCondition::XN),
             _ => None,
         }
     }
@@ -284,9 +301,20 @@ pub fn trits_to_aluop(trits: [Trit; 3]) -> Option<AluOp> {
         -8 => Some(AluOp::TritInv),
         -7 => Some(AluOp::TritMin),
         -6 => Some(AluOp::TritMax),
-        -5 => Some(AluOp::Shl),
-        -4 => Some(AluOp::Shr),
-        -3 => Some(AluOp::Cmp),
+        -5 => Some(AluOp::And),
+        -4 => Some(AluOp::Or),
+        -3 => Some(AluOp::Xor),
+        -2 => Some(AluOp::Shl),
+        -1 => Some(AluOp::Shr),
+        0 => Some(AluOp::Cmp),
+        // Nouvelles instructions ternaires spécialisées
+        1 => Some(AluOp::Compare3),      // TCMP3
+        2 => Some(AluOp::Abs),           // ABS_T
+        3 => Some(AluOp::Signum),        // SIGNUM_T
+        4 => Some(AluOp::ExtractTryte),  // EXTRACT_TRYTE
+        5 => Some(AluOp::InsertTryte),   // INSERT_TRYTE
+        6 => Some(AluOp::CheckW),        // CHECKW_VALID
+        7 => Some(AluOp::IsSpecialTryte), // IS_SPECIAL_TRYTE
         _ => None, // Opération ALU invalide
     }
 }
