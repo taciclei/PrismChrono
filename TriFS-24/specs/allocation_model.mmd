@@ -1,0 +1,16 @@
+classDiagram
+    class Allocator {
+        + total: usize
+        + map: Vec<u8>
+        + new(total: usize) -> Allocator
+        + allocate() -> Option<usize>
+        + reserve() -> Option<usize>
+        + free(index: usize) -> bool
+        + status() -> Status
+    }
+    class Status {
+        + free: usize
+        + used: usize
+        + reserved: usize
+    }
+    Allocator : map values = 0 libre, 1 occupé, 2 réservé

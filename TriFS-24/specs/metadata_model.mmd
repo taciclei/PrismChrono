@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class FNode {
+        - attrs: HashMap<String, String>
+        + new() -> FNode
+        + set_attr(key: &str, value: &str) -> Option<String>
+        + get_attr(key: &str) -> Option<String>
+    }
+    FNode : gestion des métadonnées d'un fichier
+```

@@ -1,0 +1,129 @@
+# 🤖 AIDEX - Règles de Génération de Code pour IA
+
+
+
+**IMPORTANT:** Ces règles sont des **contraintes strictes** pour toute génération ou modification de code par l'IA dans le projet EyeSloth Trainer. Elles complètent et précisent le **Sprint Blueprint** actif, qui reste la source de vérité principale pour le contenu spécifique du sprint.
+
+parle moi tjours en francais !
+---
+
+## 1. Contexte d'Exécution (Toujours requis dans le prompt)
+
+*   **Référence au Blueprint :** Toujours spécifier l'ID du Sprint Blueprint (`BP-XX-YYY`) et la tâche spécifique (`EYSL-XXX`) concernée.
+*   **Périmètre d'Action :** N'intervenir *que* sur les fichiers explicitement listés dans la section `Cartographie des Fichiers` du Blueprint pour la tâche assignée.
+    *   **Ne jamais créer de nouveaux fichiers non spécifiés dans le Blueprint.**
+    *   **Ne jamais modifier des fichiers non spécifiés dans le Blueprint.**
+    *   Si une modification semble nécessaire hors périmètre, le signaler au développeur pour validation et mise à jour éventuelle du Blueprint.
+*   **Référence aux Artefacts :** Si la tâche implique des diagrammes Mermaid (`spec/` ou Blueprint) ou des SVG (`wireframes/` ou Blueprint), référencer leur ID ou leur nom exact dans le prompt. Le code généré *doit* correspondre strictement à ces artefacts.
+
+---
+
+## 2. Structure du Projet & Architecture (DDD & Clean Architecture - Structure Actuelle)
+
+*   **Structure Imposée :** Respecter *impérativement* la structure de dossiers **existante** du projet. Les principales couches sont organisées comme suit (référer à l'arborescence fournie pour les détails) :
+    *   **`src/Domain/`** : Logique métier pure, indépendante des frameworks.
+        *   `Entities/`, `ValueObjects/`, `Repositories/` (Interfaces), `Services/` (Domain Logic), `Events/`.
+    *   **`src/Application/`** : Orchestration, cas d'utilisation.
+        *   `UseCases/` (ou `Services/`), `DTOs/`, `Interfaces/` (App Services).
+    *   **`src/Infrastructure/`** : Détails techniques, dépendances externes.
+        *   `Repositories/` (Implémentations), `Persistence/`, `ExternalServices/`, `Services/` (Ex: FaceDetection, Speech Recognition), `Vision/` (Implémentations liées à VisionKit/OpenCV si applicable).
+    *   **`src/Presentation/`** : UI, interaction utilisateur.
+        *   `Views/` (SwiftUI), `ViewModels/`, `Coordinators/` (Navigation).
+    *   **`src/Shared/`** : Code partagé transversalement (Constantes, Extensions génériques, Utils). **Utiliser avec parcimonie.**
+    *   *Note :* Certains fichiers existent encore hors de `src/`. Les nouvelles implémentations doivent suivre la structure `src/`. Le Blueprint indiquera si une refactorisation est prévue.
+*   **Dépendances Inter-Couches (Rappel Strict) :**
+    *   `Presentation` -> `Application`
+    *   `Application` -> `Domain`
+    *   `Infrastructure` -> `Domain` (implémente interfaces), `Application` (utilise interfaces)
+    *   **INTERDIT :** `Domain` -> (`Application`, `Infrastructure`, `Presentation`)
+    *   **INTERDIT :** `Application` -> (`Infrastructure`, `Presentation`)
+*   **Bounded Contexts :** Si le Blueprint spécifie un Bounded Context (ex: `EvaluationVisuelle`, `TherapyExecution`), s'assurer que le code reste dans les limites de ce contexte (sous-dossiers dédiés, dépendances limitées).
+*   **Repositories :** Interfaces dans `src/Domain/Repositories/`. Implémentations dans `src/Infrastructure/Repositories/`. `Application` et `Domain` utilisent *uniquement* les interfaces du Domaine.
+*   **Services :** Logique métier dans `src/Domain/Services/`. Orchestration dans `src/Application/UseCases/` ou `src/Application/Services/`. Services techniques (FaceDetection, Speech) dans `src/Infrastructure/Services/`, accessibles via des interfaces définies par l'Application ou le Domaine.
+
+---
+
+## 3. Principes SOLID (Contraintes Mesurables - Rappel Strict)
+
+*   **(S) Responsabilité Unique :** Max 1 responsabilité par type, Max 15 lignes/fonction, Max 3 dépendances injectées, Max 200 lignes/fichier, Max 1 méthode publique/use case.
+*   **(O) Ouvert/Fermé :** Injection de dépendances via `init` obligatoire. Extensions via protocoles/implémentations multiples. Pas de modification directe sauf si spécifié.
+*   **(L) Substitution de Liskov :** Respect strict du contrat du type de base. Inclure `assert` si demandé.
+*   **(I) Ségrégation d'Interface :** Max 3 méthodes/protocole. Interfaces spécifiques au client.
+*   **(D) Inversion de Dépendance :** Dépendre d'abstractions (protocoles). Protocoles définis par le client (App ou Domain). Pas d'instanciation directe inter-couches (utiliser injection).
+
+---
+
+## 4. Style de Code & Conventions Swift (EyeSloth Trainer - Rappel Strict)
+
+*   **Langage :** Swift (dernière version stable du projet).
+*   **Framework UI :** **SwiftUI** par défaut. UIKit via Representables *uniquement* si le Blueprint le demande explicitement.
+*   **Immuabilité :** Préférer `let`. `struct` pour VOs/DTOs.
+*   **Gestion Erreurs :** `enum Error`. Préférer `Result<Success, Failure>`. Pas de `fatalError()`.
+*   **Asynchronisme :** **`async/await`**.
+*   **Nommage :** Anglais (sauf vocabulaire ubiquitaire validé), clair, explicite, conventions Swift. Pas d'abréviations non standard.
+*   **Formatage :** Respecter SwiftLint configuré.
+*   **Documentation :** `///` pour *tout* `public`/`internal`. Expliquer le *pourquoi*. Markdown.
+*   **Organisation :** `extension`, `// MARK: -`.
+*   **Accès :** Niveau le plus restrictif (`private` > `fileprivate` > `internal` > `public`).
+
+---
+
+## 5. Domaine Spécifique (EyeSloth Trainer - Précisions)
+
+*   **Vocabulaire :** Utiliser *exactement* les termes du glossaire/Blueprint/`src/Domain/`. Exemples actuels : `VisualAcuityResult`, `ContrastSensitivityResult`, `Patient`, `VisualAcuityTest`.
+*   **Value Objects (`src/Domain/ValueObjects/`) :** Mesures, configurations, résultats partiels. Immuables (`struct`), validation dans `init`.
+*   **Entities (`src/Domain/Entities/`) :** Objets avec identité (`id: UUID`). Ex: `Patient`, `VisualAcuityTest`.
+*   **Aggregates (Ex: `src/Domain/Aggregates/`) :** Racine + entités/VOs liés. Modifications via la racine. Respecter limites du Blueprint.
+*   **Règles Métier :** **Exclusivement** dans `src/Domain/`.
+
+---
+
+## 6. UI & UX (Selon Artefacts - Précisions)
+
+*   **Base SwiftUI (`src/Presentation/Views/`) :** Générer le code *strictement* depuis les SVG (`wireframes/` ou Blueprint). Respecter les `id` pour liaison et tests. Utiliser `@State`, `@StateObject`, `@ObservedObject`, `@EnvironmentObject` de manière appropriée.
+*   **ViewModel (`src/Presentation/ViewModels/`) :** Pattern MVVM. Exposer via `@Published`. Appeler Use Cases/Services Applicatifs. **Pas de logique métier ici.**
+*   **Charte Graphique :** Appliquer `spec/16-charte-graphique.md`.
+*   **Accessibilité :** Implémenter `accessibilityLabel`, `accessibilityHint`, `accessibilityIdentifier` (basé sur `id` SVG), `accessibilityTraits`. Compatibilité VoiceOver/Dynamic Type obligatoire.
+*   **Navigation (`src/Presentation/Coordinators/` ou SwiftUI native) :** Implémenter selon diagramme de navigation du Blueprint.
+
+---
+
+## 7. Tests (`EyeSlothTrainerTests/`)
+
+*   **Génération Tests :** Pour chaque tâche, générer les tests correspondants dans les dossiers dédiés (`Unit/`, `Integration/`, `UI/`).
+    *   **Unitaires :** Logique `Domain` et `Application`. XCTest. Couverture > 85%.
+    *   **Intégration :** Interactions Use Case -> Repository Interface. Mocker *uniquement* les dépendances externes (réseau, BDD réelle).
+    *   **UI / BDD (`EyeSlothTrainerTests/Features/` & `EyeSlothTrainerTests/Presentation/Steps/`) :** Implémenter les Step Definitions pour les Gherkin du Blueprint. Utiliser XCUITest. Sélecteurs via `accessibilityIdentifier`.
+*   **TDD :** Si spécifié, générer test échouant -> code passant.
+*   **Mocks :** Simples (protocoles + impl. factices) ou frameworks si projet l'utilise. Placer dans cibles de test.
+
+---
+
+## 8. Services Techniques & Externes (`src/Infrastructure/`)
+
+*   **Couche d'Abstraction (ACL) :** Code interagissant avec VisionKit, ARKit, CoreML, SpeechRecognition, Persistence (CoreData, etc.) doit être dans `src/Infrastructure/`.
+*   **Interfaces Définies par Client :** `Application` ou `Domain` définit les protocoles nécessaires (ex: `FaceDetector`, `DistanceProvider`, `SpeechRecognizer`).
+*   **Adapters/Implémentations (`src/Infrastructure/Services/` ou `src/Infrastructure/Repositories/`) :** L'Infrastructure fournit les implémentations concrètes de ces protocoles.
+*   **Injection :** Les implémentations concrètes sont injectées via DI (ex: dans `AppDependencies.swift` ou équivalent).
+
+---
+
+## 9. Gestion du Code Source (GitFlow & Commits - Rappel Strict)
+
+*   **Branches :** `feature/EYSL-XXX...`
+*   **Commits :** Atomiques, fréquents. Format **strict** : `[EYSL-XXX][couche] type: description concise`.
+    *   `couche` : `domain`, `app`, `infra`, `pres`, `test`, `docs`, `ci`, `shared`
+    *   `type` : `feat`, `fix`, `refactor`, `test`, `docs`, `style`, `chore`
+
+---
+
+## 10. Anti-Patterns à Éviter **ABSOLUMENT** (Rappel Strict)
+
+*   **Code Mort/Non Atteignable :** Interdit.
+*   **Duplication :** Vérifier existence avant génération. Proposer réutilisation/refactoring.
+*   **Sur-Abstraction / Complexité Inutile :** Interdit sauf si explicitement demandé par le Blueprint.
+*   **Dépendances Incorrectes :** Interdit (cf. règle 2).
+*   **Ignorer le Blueprint :** Interdit. Toute déviation nécessite validation humaine.
+*   **Commentaires Redondants :** Interdit. Documentation `///` pour API. Commentaires pour *pourquoi* complexe.
+
+---

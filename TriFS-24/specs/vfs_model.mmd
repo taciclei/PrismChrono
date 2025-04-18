@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class Vfs {
+        - store: HashMap<String, String>
+        + mount(source: &str, mount_point: &str) -> Vfs
+        + write(path: &str, data: &str) -> bool
+        + read(path: &str) -> Option<String>
+    }
+    Vfs : stub VFS FUSE-like pour TriFS-24
+```

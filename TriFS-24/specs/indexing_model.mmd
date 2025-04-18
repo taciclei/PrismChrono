@@ -1,0 +1,11 @@
+```mermaid
+classDiagram
+    class VectorIndex {
+        - map: HashMap<usize, Vec<f32>>
+        + new() -> VectorIndex
+        + insert(key: usize, vector: Vec<f32>) -> bool
+        + query(key: usize) -> Option<Vec<f32>>
+        + query_similar(query: &[f32], k: usize) -> Vec<usize>
+    }
+    VectorIndex : indexation vectorielle avec recherche de similarité
+```

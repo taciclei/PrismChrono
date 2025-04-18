@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class SnapshotManager {
+        - versions: HashSet<String>
+        + new() -> SnapshotManager
+        + create_snapshot(version: &str) -> bool
+        + restore_snapshot(version: &str) -> bool
+    }
+    SnapshotManager : gestion des snapshots et versionning
+```

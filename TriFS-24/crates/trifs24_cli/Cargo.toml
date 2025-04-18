@@ -1,0 +1,8 @@
+[package]
+name = "trifs24_cli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+trifs24_allocator = { path = "../trifs24_allocator" }
+clap = { version = "4.0", features = ["derive"] }

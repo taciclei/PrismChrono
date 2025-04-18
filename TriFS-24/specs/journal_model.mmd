@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class Journal {
+        - events: VecDeque<String>
+        + new() -> Journal
+        + record(event: &str)
+        + last_event() -> Option<&String>
+    }
+    Journal : journalisation ternaire des opérations
+```

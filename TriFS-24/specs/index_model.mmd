@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class VectorIndex {
+        - map: HashMap<usize, Vec<f32>>
+        + new() -> VectorIndex
+        + insert(key: usize, vector: Vec<f32>) -> bool
+        + query(key: usize) -> Option<Vec<f32>>
+    }
+    VectorIndex : stub d'index vectoriel
+```

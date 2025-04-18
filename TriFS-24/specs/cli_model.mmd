@@ -1,0 +1,10 @@
+```mermaid
+classDiagram
+    class Cli {
+        + mount(source: &str, mount_point: &str) -> Vfs
+        + alloc(total: Option<usize>) -> usize
+        + free(index: usize, total: Option<usize>) -> bool
+        + status(total: Option<usize>) -> Status
+    }
+    Cli : CLI pour TriFS-24
+```

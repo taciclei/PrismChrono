@@ -1,0 +1,8 @@
+```mermaid
+classDiagram
+    class Connectors {
+        + tf_predict(input: Vec<f32>) -> Vec<f32>
+        + pt_predict(input: Vec<f32>) -> Vec<f32>
+    }
+    Connectors : stub TensorFlow & PyTorch connectors
+```

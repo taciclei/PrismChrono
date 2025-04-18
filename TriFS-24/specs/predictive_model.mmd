@@ -1,0 +1,9 @@
+```mermaid
+classDiagram
+    class PredictiveAllocator {
+        - history: Vec<usize>
+        + new() -> PredictiveAllocator
+        + predictive_alloc() -> Option<usize>
+    }
+    PredictiveAllocator : stub d'allocateur prédictif IA
+```
